@@ -15,6 +15,13 @@ namespace DBMigrator.Model
             get { return Directory.Name; }
         }
         public List<Script> UpgradeScripts { get; set; } = new List<Script>();
+
+        public List<Script> RollbackScripts {
+            get {
+                return UpgradeScripts.OrderByDescending(u => u.Order).Select(u => u.RollbackScript).ToList();
+            }
+        }
+
         public List<Script> FuncsSPsViewsTriggers { get; set; } = new List<Script>();
         public DBVersion Version { get; set; }
 

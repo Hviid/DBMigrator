@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigrator.Test", "DBMigrator.Test\DBMigrator.Test.csproj", "{B6B356EC-9EF5-4AE7-9A52-2F8E68A0CC52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{B89EB784-C1AD-457F-A556-29849101BA30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B89EB784-C1AD-457F-A556-29849101BA30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B89EB784-C1AD-457F-A556-29849101BA30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6B356EC-9EF5-4AE7-9A52-2F8E68A0CC52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6B356EC-9EF5-4AE7-9A52-2F8E68A0CC52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6B356EC-9EF5-4AE7-9A52-2F8E68A0CC52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6B356EC-9EF5-4AE7-9A52-2F8E68A0CC52}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

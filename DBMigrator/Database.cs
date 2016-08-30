@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Data.SqlClient;
 using DBMigrator.Model;
-using System.Text;
-using Microsoft.Extensions.Logging;
 using System.IO;
+using System.Diagnostics;
 
 namespace DBMigrator
 {
@@ -22,12 +20,12 @@ namespace DBMigrator
             executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             var connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
             sqlconn = new SqlConnection(connectionString);
-            sqlconn.Open();
             allVersions = GetDBState();
         }
 
         public string CheckDatabaseVersion()
         {
+            sqlconn.Open();
             var version = "0.0.0.0";
             try
             {
@@ -40,10 +38,11 @@ namespace DBMigrator
             {
                 CreateDBVersionTable();
             }
+            sqlconn.Close();
             return version;
         }
 
-        public void CreateDBVersionTable()
+        private void CreateDBVersionTable()
         {
             Logger.GetInstance().Log("Creating DBVersion table");
             ExecuteCommand("CREATE TABLE DBVersion ([ID] [int] IDENTITY(1,1) NOT NULL, Version varchar(max) NOT NULL, Date datetime2 NOT NULL, Log xml NOT NULL, CONSTRAINT [PK_dbo.DBVersion] PRIMARY KEY CLUSTERED ([ID] ASC))");
@@ -63,10 +62,19 @@ namespace DBMigrator
             }
         }
 
+        public void UpdateLog(DBVersion version)
+        {
+            ExecuteCommand($"UPDATE DBVersion SET Log = '<xml>' + CHAR(13) + '{Logger.GetInstance().log.ToString()}</xml>' WHERE ID = {version.ID}");
+        }
+
         public void UpdateDataWithFile(Script script)
         {
-            ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.Name}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
+            var sw = new Stopwatch();
+            sw.Start();
             ExecuteCommand(script.SQL);
+            sw.Stop();
+            script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
+            ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.Name}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
         }
 
         private SqlDataReader ExecuteCommand(string cmd)
@@ -80,17 +88,20 @@ namespace DBMigrator
 
         public void BeginTransaction()
         {
+            sqlconn.Open();
             trans = sqlconn.BeginTransaction();
         }
 
         public void CommitTransaction()
         {
             trans.Commit();
+            sqlconn.Close();
         }
 
         public void RollbackTransaction()
         {
             trans.Rollback();
+            sqlconn.Close();
         }
 
         public void Close()
@@ -99,6 +110,8 @@ namespace DBMigrator
         }
 
         public List<DBVersion> GetDBState() {
+            CheckDatabaseVersion();
+            sqlconn.Open();
             var result = new List<DBVersion>();
             var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [Checksum], [ExecutionTime] FROM [DBVersion] INNER JOIN [DbversionScripts] ON [DBVersion].ID = [DbversionScripts].DBVersionID");
             while (data.Read())
@@ -119,6 +132,7 @@ namespace DBMigrator
                 }
                 dbversion.AddOrUpdateFeature(feature, new Script(new FileInfo(Path.Combine(dbversion.Directory.FullName, feature, "Migrations", script)), order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null, null));
             }
+            sqlconn.Close();
             return result;
         }
 

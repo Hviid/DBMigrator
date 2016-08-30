@@ -20,33 +20,28 @@ namespace DBMigrator
             _dBFolder = dbFolder;
         }
 
-        public void Rollback(string toVersionString)
+        public void Rollback(List<DBVersion> versionsToRollback)
         {
             _database.BeginTransaction();
-            var databaseVersionString = _database.CheckDatabaseVersion();
-            var databaseVersion = new Version(databaseVersionString);
 
-            Logger.GetInstance().Log($"Rolling back to version {toVersionString}");
-            var toVersion = new Version(toVersionString);
-            var allFolderVersions = _dBFolder.allVersions;
-            var versionToRollback = allFolderVersions.Where(v => v.Version <= databaseVersion && v.Version > toVersion).OrderBy(d => d.Version).ToList();
-
-            if (versionToRollback.Count() == 0)
+            if (versionsToRollback.Count() == 0)
             {
                 Logger.GetInstance().Log("No downgrades found");
             }
 
-            foreach (var rollbackToVersion in versionToRollback)
+            foreach (var rollbackToVersion in versionsToRollback)
             {
                 Logger.GetInstance().Log($"Downgrading to version {rollbackToVersion.Name}");
                 try {
+
+                    _database.UpdateDatabaseVersion(rollbackToVersion);
 
                     foreach (var featureToRollback in rollbackToVersion.Features)
                     {
                         DowngradeFeature(featureToRollback);
                     }
 
-                    _database.UpdateDatabaseVersion(rollbackToVersion);
+                    _database.UpdateLog(rollbackToVersion);
 
                     //throw "test"
                     _database.CommitTransaction();
@@ -61,23 +56,9 @@ namespace DBMigrator
             _database.Close();
         }
 
-        public void Upgrade(string toVersionString)
+        public void Upgrade(List<DBVersion> versionsToUpgrade)
         {
             _database.BeginTransaction();
-
-            var databaseVersionString = _database.CheckDatabaseVersion();
-            var databaseVersion = new Version(databaseVersionString);
-            var versionsToUpgrade = new List<DBVersion>();
-            var allFolderVersions = _dBFolder.allVersions;
-
-            if (!string.IsNullOrEmpty(toVersionString)){
-                Logger.GetInstance().Log($"Upgrading to version {toVersionString}");
-                var toVersion = new Version(toVersionString);
-                versionsToUpgrade = allFolderVersions.Where(d => d.Version > databaseVersion && d.Version <= toVersion).OrderBy(d => d.Version).ToList();
-            } else {
-                Logger.GetInstance().Log("Upgrading to newest version");
-                versionsToUpgrade = allFolderVersions.Where(d => d.Version > databaseVersion).OrderBy(d => d.Version).ToList();
-            }
 
             if(versionsToUpgrade.Count() == 0)
             {
@@ -96,6 +77,8 @@ namespace DBMigrator
                     {
                         UpgradeFeature(featureToUpgrade);
                     }
+
+                    _database.UpdateLog(upgradeToVersion);
                 }
                 //throw "test"
                 _database.CommitTransaction();
@@ -110,7 +93,11 @@ namespace DBMigrator
         private void DowngradeFeature(Feature feature){
             Logger.GetInstance().Log($"Downgrading database feature {feature.Name}");
 
-            //RunFeatureMigration(folder.Name, rollbackFolder);
+            foreach (var script in feature.RollbackScripts)
+            {
+                Logger.GetInstance().Log($"--------Running script: {script.Name}");
+                _database.UpdateDataWithFile(script);
+            }
         }
 
         private void UpgradeFeature(Feature feature){

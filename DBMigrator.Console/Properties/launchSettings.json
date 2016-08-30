@@ -2,7 +2,7 @@
   "profiles": {
     "DBMigrator.Console": {
       "commandName": "Project",
-      "commandLineArgs": "upgrade amphi-sql.amphi-ppj.dk frapp_dev sa G4uMenX4 1.2.3"
+      "commandLineArgs": "rollback 1.0.0 amphi-sql.amphi-ppj.dk frapp_dev sa G4uMenX4"
     }
   }
 }

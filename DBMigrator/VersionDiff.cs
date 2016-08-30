@@ -97,7 +97,7 @@ namespace DBMigrator
 
         private void CopyScriptToFeature(Script sourceScript, Feature target)
         {
-            var script = new Script(sourceScript.File, sourceScript.Order, sourceScript.Type, target, sourceScript.RollbackScript);
+            var script = new Script(sourceScript.File, sourceScript.Order, sourceScript.Type, target);
             target.AddScript(script);
         }
 

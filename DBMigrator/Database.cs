@@ -130,7 +130,7 @@ namespace DBMigrator
                     dbversion = new DBVersion(new DirectoryInfo(Path.Combine(executingPath, version)));
                     result.Add(dbversion);
                 }
-                dbversion.AddOrUpdateFeature(feature, new Script(new FileInfo(Path.Combine(dbversion.Directory.FullName, feature, "Migrations", script)), order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null, null));
+                dbversion.AddOrUpdateFeature(feature, new Script(new FileInfo(Path.Combine(dbversion.Directory.FullName, feature, "Migrations", script)), order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null));
             }
             sqlconn.Close();
             return result;

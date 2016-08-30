@@ -22,18 +22,24 @@ namespace DBMigrator.Model
 
         public Feature Feature { get; set; }
 
-        public Script(FileInfo ScriptFile, int order, SQLTYPE type, Feature feature, Script rollback)
+        public Script(FileInfo ScriptFile, int order, SQLTYPE type, Feature feature)
         {
             File = ScriptFile;
             Feature = feature;
             Order = order;
-            RollbackScript = rollback;
 
             if (!_migrationTypes.Contains(type))
             {
                 if (Regex.IsMatch(SQL, ILLEGAL_REGEX)) throw new Exception($"Not allowed to have ALTER in {type.ToString()} files");
             }
+            if(type == SQLTYPE.Upgrade)
+            {
+                FindRollback();
+            }
+
         }
+
+
         public int Order { get; }
         public FileInfo File { get; }
         public string Name {
@@ -51,13 +57,29 @@ namespace DBMigrator.Model
             }
         }
         public int ExecutionTime { get; set; }
-        public Script RollbackScript { get; }
+        public Script RollbackScript { get; private set; }
         public string SQL
         {
             get { return System.IO.File.ReadAllText(File.FullName); }
         }
         public bool IsRun { get; set; }
         
+        private void FindRollback()
+        {
+            var match = Regex.Match(this.Name, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
+
+            var rollbackFileName = $"{match.Groups[1]}_rollback_{match.Groups[2]}.sql";
+
+            if (System.IO.File.Exists(Path.Combine(File.Directory.FullName, rollbackFileName)))
+            {
+                RollbackScript = new Script(new FileInfo(rollbackFileName), Order, Script.SQLTYPE.Rollback, Feature);
+            }
+            else
+            {
+                throw new Exception($"Could not find rollback script file {rollbackFileName} for script file {Name}");
+            }
+        }
+
     }
 }
 

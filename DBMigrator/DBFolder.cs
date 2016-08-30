@@ -55,6 +55,7 @@ namespace DBMigrator
                 if (match.Success)
                 {
                     var order = int.Parse(match.Groups[1].Value);
+                    
                     result.Add(new Script(new FileInfo(scriptName), order, Script.SQLTYPE.Upgrade, feature));
                 }
                 else if (!Regex.IsMatch(scriptName, Script.MIGRATIONS_ROLLBACK_FILENAME_REGEX))

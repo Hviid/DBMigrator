@@ -28,7 +28,8 @@ namespace DBMigrator.Console
                     logger.LogInformation(diffText);
                     System.Console.ReadKey();
                     migrator = new Migrator(database, dbfolder);
-                    migrator.Upgrade(args[5]);
+                    migrator.Upgrade(diff);
+                    System.Console.ReadKey();
                     break;
                 case "rollback":
                     var database1 = new Database(args[2], args[3], args[4], args[5]);
@@ -36,10 +37,12 @@ namespace DBMigrator.Console
                     var validator1 = new Validator();
                     validator1.ValidateVersions(dbfolder1.allVersions, database1.allVersions);
                     var differ1 = new VersionDiff();
-                    differ1.Diff(database1.allVersions, dbfolder1.GetVersionsUpTo(args[5]));
+                    var diff1 = differ1.Diff(database1.allVersions, dbfolder1.GetVersionsUpTo(args[1]));
+                    var diffText1 = differ1.DiffText(diff1);
+                    logger.LogInformation(diffText1);
                     System.Console.ReadKey();
                     migrator = new Migrator(database1, dbfolder1);
-                    migrator.Rollback(args[1]);
+                    migrator.Rollback(diff1);
                     System.Console.ReadKey();
                     break;
                 case "validate":

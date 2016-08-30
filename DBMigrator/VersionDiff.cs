@@ -53,9 +53,9 @@ namespace DBMigrator
                         if(diffVersion == null)
                         {
                             diffVersion = new DBVersion(targetVersion.Directory);
+                            diff.Add(diffVersion);
                         }
-                        diffVersion.Features.Add(sourceFeature);
-                        diff.Add(diffVersion);
+                        CopyFeatureToVersion(sourceFeature, diffVersion);
                         continue;
                     }
 
@@ -68,25 +68,37 @@ namespace DBMigrator
                             if (diffVersion == null)
                             {
                                 diffVersion = new DBVersion(targetVersion.Directory);
+                                diff.Add(diffVersion);
                             }
-                            diff.Add(diffVersion);
+                            
                             var diffFeature = diffVersion.Features.SingleOrDefault(t => t.Name == targetFeature.Name);
                             if (diffFeature == null)
                             {
                                 diffFeature = new Feature(targetFeature.Directory, diffVersion);
+                                diffVersion.Features.Add(diffFeature);
                             }
-                            diffVersion.Features.Add(diffFeature);
-                            var diffScript = diffFeature.UpgradeScripts.SingleOrDefault(t => t.Name == targetScript.Name);
-                            if (diffScript == null)
-                            {
-                                diffScript = new Script(sourceScript.File, sourceScript.Order, sourceScript.Type, diffFeature, sourceScript.RollbackScript);
-                            }
-                            diffFeature.AddScript(diffScript);
+                            CopyScriptToFeature(sourceScript, diffFeature);
                         }
                     }
                 }
             }
             return diff;
+        }
+
+        private void CopyFeatureToVersion(Feature sourceFeature, DBVersion target)
+        {
+            var feature = new Feature(sourceFeature.Directory, target);
+            foreach (var script in sourceFeature.UpgradeScripts)
+            {
+                CopyScriptToFeature(script, feature);
+            }
+            target.Features.Add(feature);
+        }
+
+        private void CopyScriptToFeature(Script sourceScript, Feature target)
+        {
+            var script = new Script(sourceScript.File, sourceScript.Order, sourceScript.Type, target, sourceScript.RollbackScript);
+            target.AddScript(script);
         }
 
     }

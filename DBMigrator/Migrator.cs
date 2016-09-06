@@ -95,7 +95,7 @@ namespace DBMigrator
 
             foreach (var script in feature.RollbackScripts)
             {
-                Logger.GetInstance().Log($"--------Running script: {script.Name}");
+                Logger.GetInstance().Log($"--------Running script: {script.FileName}");
                 _database.UpdateDataWithFile(script);
             }
         }
@@ -105,7 +105,7 @@ namespace DBMigrator
             
             foreach (var script in feature.UpgradeScripts)
             {
-                Logger.GetInstance().Log($"--------Running script: {script.Name}");
+                Logger.GetInstance().Log($"--------Running script: {script.FileName}");
                 _database.UpdateDataWithFile(script);
             }
         }

@@ -20,11 +20,11 @@ namespace DBMigrator.Model
 
         public enum SQLTYPE { Upgrade, Rollback, View, Function, StoredProcedure, Trigger };
 
-        public Feature Feature { get; set; }
+        public Feature Feature { get; }
 
-        public Script(FileInfo ScriptFile, int order, SQLTYPE type, Feature feature)
+        public Script(string ScriptFile, int order, SQLTYPE type, Feature feature)
         {
-            File = ScriptFile;
+            FileName = ScriptFile;
             Feature = feature;
             Order = order;
 
@@ -32,54 +32,16 @@ namespace DBMigrator.Model
             {
                 if (Regex.IsMatch(SQL, ILLEGAL_REGEX)) throw new Exception($"Not allowed to have ALTER in {type.ToString()} files");
             }
-            if(type == SQLTYPE.Upgrade)
-            {
-                FindRollback();
-            }
-
         }
 
 
         public int Order { get; }
-        public FileInfo File { get; }
-        public string Name {
-            get { return File.Name; }
-        }
+        public string FileName { get; }
         public SQLTYPE Type { get; }
-        public string Checksum {
-            get {
-                using (var stream = new BufferedStream(System.IO.File.OpenRead(File.FullName), 1200000))
-                {
-                    SHA256 sha = SHA256.Create();
-                    byte[] checksum = sha.ComputeHash(stream);
-                    return BitConverter.ToString(checksum).Replace("-", String.Empty);
-                }
-            }
-        }
+        public string Checksum { get; set; }
         public int ExecutionTime { get; set; }
         public Script RollbackScript { get; private set; }
-        public string SQL
-        {
-            get { return System.IO.File.ReadAllText(File.FullName); }
-        }
-        public bool IsRun { get; set; }
-        
-        private void FindRollback()
-        {
-            var match = Regex.Match(this.Name, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
-
-            var rollbackFileName = $"{match.Groups[1]}_rollback_{match.Groups[2]}.sql";
-
-            if (System.IO.File.Exists(Path.Combine(File.Directory.FullName, rollbackFileName)))
-            {
-                RollbackScript = new Script(new FileInfo(rollbackFileName), Order, Script.SQLTYPE.Rollback, Feature);
-            }
-            else
-            {
-                throw new Exception($"Could not find rollback script file {rollbackFileName} for script file {Name}");
-            }
-        }
-
+        public string SQL { get; set; }
     }
 }
 

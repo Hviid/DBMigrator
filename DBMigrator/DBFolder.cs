@@ -4,18 +4,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace DBMigrator
 {
     public class DBFolder
     {
-        private string executingPath;
+        private DirectoryInfo _executingDirectory;
         public List<DBVersion> allVersions;
 
-        public DBFolder()
+        public DBFolder(string executingDirectoryPath = null)
         {
-            executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            if (String.IsNullOrEmpty(executingDirectoryPath))
+            {
+                //executingDirectory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+                _executingDirectory = new DirectoryInfo(Path.GetDirectoryName(typeof(Validator).GetTypeInfo().Assembly.Location));
+                //executingDirectory = new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
+            }
+            else
+            {
+                _executingDirectory = new DirectoryInfo(executingDirectoryPath);
+            }
             allVersions = GetFolderState();
         }
 
@@ -27,28 +37,36 @@ namespace DBMigrator
 
         private List<DBVersion> GetFolderState()
         {
-            var allVersions = Directory.GetDirectories(executingPath).Select(d => new DBVersion((new DirectoryInfo(d)))).ToList();
+            var allVersions = _executingDirectory.GetDirectories().Select(d => new DBVersion(d.Name)).ToList();
 
             foreach (var version in allVersions)
             {
-                version.Features = version.Directory.GetDirectories().Select(d => new Feature(new DirectoryInfo(d.FullName), version)).ToList();
-                foreach (var feature in version.Features)
-                {
-                    feature.UpgradeScripts = FindMigrationsForFeature(feature);
-                }
+                FindFeaturesForVersion(version);
             }
 
             return allVersions;
         }
 
-        private List<Script> FindMigrationsForFeature(Feature feature)
+        private void FindFeaturesForVersion(DBVersion version)
         {
-            var result = new List<Script>();
-            var fullpath = Path.Combine(feature.Directory.FullName, "Migrations");
+            var featureFolders = GetVersionDirectory(version).GetDirectories();
+            foreach (var featureFolder in featureFolders)
+            {
+                version.AddFeature(featureFolder.Name);
+            }
+            foreach (var feature in version.Features)
+            {
+                FindMigrationsForFeature(feature);
+            }
+        }
 
-            var sqlScriptsNames = System.IO.Directory.GetFiles(fullpath, "*.sql");
+        private void FindMigrationsForFeature(Feature feature)
+        {
+            var migrationsPath = Path.Combine(GetFeaturePath(feature), "Migrations");
 
-            foreach (var scriptName in sqlScriptsNames)
+            var sqlScriptsNames = Directory.GetFiles(migrationsPath, "*.sql");
+
+            foreach (var scriptName in sqlScriptsNames.Select(s => Path.GetFileName(s)))
             {
                 var match = Regex.Match(scriptName, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
 
@@ -56,14 +74,37 @@ namespace DBMigrator
                 {
                     var order = int.Parse(match.Groups[1].Value);
                     
-                    result.Add(new Script(new FileInfo(scriptName), order, Script.SQLTYPE.Upgrade, feature));
+                    feature.AddScript(new Script(scriptName, order, Script.SQLTYPE.Upgrade, feature));
                 }
                 else if (!Regex.IsMatch(scriptName, Script.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
                 {
                     throw new Exception($"file {scriptName} aren't a rollback script, and doesn't match the expected regex format: {Script.MIGRATIONS_UPGRADE_FILENAME_REGEX}");
                 }
             }
-            return result;
+        }
+
+        private DirectoryInfo GetVersionDirectory(DBVersion version)
+        {
+            return new DirectoryInfo(Path.Combine(_executingDirectory.FullName, version.Name));
+        }
+
+        private string GetFeaturePath(Feature feature)
+        {
+            var versionFolderPath = Path.Combine(_executingDirectory.FullName, feature.Version.Name);
+            return Path.Combine(versionFolderPath, feature.Name);
+        }
+
+        public Script FindRollback(Script upgradeScript)
+        {
+            var match = Regex.Match(upgradeScript.FileName, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
+
+            var rollbackFileName = $"{match.Groups[1]}_rollback_{match.Groups[2]}.sql";
+            
+            if (System.IO.File.Exists(Path.Combine(GetFeaturePath(upgradeScript.Feature), rollbackFileName)))
+            {
+                return new Script(rollbackFileName, upgradeScript.Order, Script.SQLTYPE.Rollback, upgradeScript.Feature);
+            }
+            return null;
         }
     }
 }

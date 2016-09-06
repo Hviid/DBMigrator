@@ -74,7 +74,7 @@ namespace DBMigrator
             ExecuteCommand(script.SQL);
             sw.Stop();
             script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
-            ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.Name}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
+            ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
         }
 
         private SqlDataReader ExecuteCommand(string cmd)
@@ -127,10 +127,10 @@ namespace DBMigrator
                 var dbversion = result.FirstOrDefault(v => v.Name == version);
                 if (dbversion == null)
                 {
-                    dbversion = new DBVersion(new DirectoryInfo(Path.Combine(executingPath, version)));
+                    dbversion = new DBVersion(version);
                     result.Add(dbversion);
                 }
-                dbversion.AddOrUpdateFeature(feature, new Script(new FileInfo(Path.Combine(dbversion.Directory.FullName, feature, "Migrations", script)), order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null));
+                dbversion.AddOrUpdateFeature(feature, new Script(script, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null));
             }
             sqlconn.Close();
             return result;

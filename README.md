@@ -10,7 +10,7 @@ This are though not desireble for us.
 
 ### State based
 Microsoft has SQL Server Data Tools(SSDT) which support a state based approach. 
-The problem with state based approach are if we wan't to do some kind of data migrations in a release. 
+The problem with state based approach are if we want to do some kind of data migrations in a release. 
 This is possible i SSDT, but the data migration get "bound" to that release. 
 So if you update your database more then 1 release, you have to apply all the release between sequantially.
 This are neither desireble.

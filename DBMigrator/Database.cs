@@ -20,7 +20,7 @@ namespace DBMigrator
             executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             var connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
             sqlconn = new SqlConnection(connectionString);
-            allVersions = GetDBState();
+            //allVersions = GetDBState();
         }
 
         public string CheckDatabaseVersion()
@@ -75,6 +75,14 @@ namespace DBMigrator
             sw.Stop();
             script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
             ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
+        }
+
+        public SqlDataReader ExecuteSingleCommand(string cmd)
+        {
+            sqlconn.Open();
+            var result = ExecuteCommand(cmd);
+            sqlconn.Close();
+            return result;
         }
 
         private SqlDataReader ExecuteCommand(string cmd)
@@ -136,10 +144,116 @@ namespace DBMigrator
             return result;
         }
 
-        //public Script GetNewestScript()
-        //{
-        //    var newestVersion = allVersions.OrderByDescending(v => v.Version).First();
-        //}
+        public int GetTablesViewsAndColumnsChecksum()
+        {
+            var query = @"SELECT
+                        CHECKSUM_AGG(CHECKSUM
+                        (TABLE_SCHEMA
+                        , DATA_TYPE
+                        , TABLE_NAME
+                        , COLUMN_NAME
+                        , NUMERIC_PRECISION
+                        , DATETIME_PRECISION
+                        , CHARACTER_MAXIMUM_LENGTH)) as TablesViewsAndColumnsChecksum
+                         FROM INFORMATION_SCHEMA.COLUMNS";
+            
+            return CheckSumHelper(query);
+        }
+
+        public int GetStoredProceduresChecksum()
+        {
+            var query = @"SELECT
+                        CHECKSUM_AGG(CHECKSUM
+                        ([SPECIFIC_CATALOG]
+                              , [SPECIFIC_SCHEMA]
+                              , [SPECIFIC_NAME]
+                              , [ROUTINE_CATALOG]
+                              , [ROUTINE_SCHEMA]
+                              , [ROUTINE_NAME]
+                              , [ROUTINE_TYPE]
+                              , [DATA_TYPE]
+                              , [CHARACTER_MAXIMUM_LENGTH]
+                              , [CHARACTER_OCTET_LENGTH]
+                              , [NUMERIC_PRECISION]
+                              , [DATETIME_PRECISION]
+                              , [ROUTINE_BODY]
+                              , [ROUTINE_DEFINITION]
+                              , [IS_DETERMINISTIC]
+                              , [SQL_DATA_ACCESS]
+                              , [IS_NULL_CALL])) as StoredProceduresChecksum
+                         FROM[amphi].[INFORMATION_SCHEMA].[ROUTINES]
+                        WHERE ROUTINE_TYPE = 'PROCEDURE'";
+
+            return CheckSumHelper(query);
+        }
+
+        public int GetFunctionsChecksum()
+        {
+            var query = @"SELECT
+                        CHECKSUM_AGG(CHECKSUM
+                        ([SPECIFIC_CATALOG]
+                              , [SPECIFIC_SCHEMA]
+                              , [SPECIFIC_NAME]
+                              , [ROUTINE_CATALOG]
+                              , [ROUTINE_SCHEMA]
+                              , [ROUTINE_NAME]
+                              , [ROUTINE_TYPE]
+                              , [DATA_TYPE]
+                              , [CHARACTER_MAXIMUM_LENGTH]
+                              , [CHARACTER_OCTET_LENGTH]
+                              , [NUMERIC_PRECISION]
+                              , [DATETIME_PRECISION]
+                              , [ROUTINE_BODY]
+                              , [ROUTINE_DEFINITION]
+                              , [IS_DETERMINISTIC]
+                              , [SQL_DATA_ACCESS]
+                              , [IS_NULL_CALL])) as FunctionsChecksum
+                         FROM[amphi].[INFORMATION_SCHEMA].[ROUTINES]
+                        WHERE ROUTINE_TYPE = 'FUNCTION'";
+
+            return CheckSumHelper(query);
+        }
+
+        public int GetTriggersChecksum()
+        {
+            var query = @"SELECT
+                        CHECKSUM_AGG(CHECKSUM
+                        ([name]
+                              , [sys].[all_objects].[object_id]
+                              , [principal_id]
+                              , [schema_id]
+                              , [parent_object_id]
+                              , [type]
+                              , [type_desc]
+                              , [is_ms_shipped]
+                              , [is_published]
+                              , [is_schema_published]
+
+                              , [definition])) as TriggersChecksum
+                        FROM[sys].[all_objects]
+                        INNER JOIN[sys].[sql_modules]
+                        ON[sys].[sql_modules].[object_id] = [sys].[all_objects].[object_id]
+                        WHERE type = 'TR'";
+
+            return CheckSumHelper(query);
+        }
+
+        private int CheckSumHelper(string query)
+        {
+            var result = 0;
+            sqlconn.Open();
+            var data = ExecuteCommand(query);
+            
+            using (data)
+            {
+                data.Read();
+                result = data.GetInt32(0);
+            }
+            sqlconn.Close();
+            return result;
+        }
+
+
 
         public void Dispose()
         {

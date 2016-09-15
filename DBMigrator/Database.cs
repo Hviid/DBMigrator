@@ -45,10 +45,10 @@ namespace DBMigrator
                     version = data.GetString(0);
                     _logger.Log($"Found existing database version {version}");
                 }
-                sqlconn.Close();
             }
             catch (Exception ex)
             {
+                sqlconn.Close();
                 CreateDBVersionTable();
             }
             return version;

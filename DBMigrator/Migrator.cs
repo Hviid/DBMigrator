@@ -6,6 +6,7 @@ using System.Linq;
 using DBMigrator.Model;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DBMigrator
 {
@@ -13,11 +14,13 @@ namespace DBMigrator
     {
         private Database _database;
         private DBFolder _dBFolder;
+        private Logger _logger;
         
         public Migrator(Database database, DBFolder dbFolder)
         {
             _database = database;
             _dBFolder = dbFolder;
+            _logger = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<Logger>();
         }
 
         public void Rollback(List<DBVersion> versionsToRollback)
@@ -26,12 +29,12 @@ namespace DBMigrator
 
             if (versionsToRollback.Count() == 0)
             {
-                Logger.GetInstance().Log("No downgrades found");
+                _logger.Log("No downgrades found");
             }
 
             foreach (var rollbackToVersion in versionsToRollback)
             {
-                Logger.GetInstance().Log($"Downgrading to version {rollbackToVersion.Name}");
+                _logger.Log($"Downgrading to version {rollbackToVersion.Name}");
                 try {
 
                     _database.UpdateDatabaseVersion(rollbackToVersion);
@@ -62,14 +65,14 @@ namespace DBMigrator
 
             if(versionsToUpgrade.Count() == 0)
             {
-                Logger.GetInstance().Log("No upgrades found");
+                _logger.Log("No upgrades found");
                 return;
             }
             
             try {
                 foreach (var upgradeToVersion in versionsToUpgrade)
                 {
-                    Logger.GetInstance().Log($"--Upgrading to version {upgradeToVersion.Name}");
+                    _logger.Log($"--Upgrading to version {upgradeToVersion.Name}");
 
                     _database.UpdateDatabaseVersion(upgradeToVersion);
 
@@ -83,7 +86,7 @@ namespace DBMigrator
                 //throw "test"
                 _database.CommitTransaction();
             } catch(Exception ex) {
-                Logger.GetInstance().Log(ex.Message);
+                _logger.Log(ex.Message);
                 _database.RollbackTransaction();
             }
 
@@ -91,21 +94,21 @@ namespace DBMigrator
         }
 
         private void DowngradeFeature(Feature feature){
-            Logger.GetInstance().Log($"Downgrading database feature {feature.Name}");
+            _logger.Log($"Downgrading database feature {feature.Name}");
 
             foreach (var script in feature.RollbackScripts)
             {
-                Logger.GetInstance().Log($"--------Running script: {script.FileName}");
+                _logger.Log($"--------Running script: {script.FileName}");
                 _database.UpdateDataWithFile(script);
             }
         }
 
         private void UpgradeFeature(Feature feature){
-            Logger.GetInstance().Log($"----Upgrading database with feature: {feature.Name}");
+            _logger.Log($"----Upgrading database with feature: {feature.Name}");
             
             foreach (var script in feature.UpgradeScripts)
             {
-                Logger.GetInstance().Log($"--------Running script: {script.FileName}");
+                _logger.Log($"--------Running script: {script.FileName}");
                 _database.UpdateDataWithFile(script);
             }
         }

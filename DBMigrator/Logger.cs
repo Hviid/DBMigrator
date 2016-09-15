@@ -10,14 +10,9 @@ namespace DBMigrator
         private ILogger<Migrator> _logger;
         public StringBuilder log = new StringBuilder();
 
-        public Logger(ILogger<Migrator> logger) {
-            _logger = logger;
+        public Logger(ILoggerFactory factory) {
+            _logger = factory.CreateLogger<Migrator>();
             _instance = this;
-        }
-
-        public static Logger GetInstance()
-        {
-            return _instance;
         }
 
         public void Log(string text)

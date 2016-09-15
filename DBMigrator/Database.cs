@@ -5,56 +5,63 @@ using System.Data.SqlClient;
 using DBMigrator.Model;
 using System.IO;
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DBMigrator
 {
     public class Database : IDisposable
     {
-        private string executingPath;
         private SqlConnection sqlconn;
         private SqlTransaction trans;
-        public List<DBVersion> allVersions;
-
+        private Logger _logger;
+        
         public Database(string servername, string database, string username, string password)
         {
-            executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             var connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
+            SetupConnAndLogger(connectionString);
+        }
+
+        public Database(string initialCatalog) // string mdfFilePath, 
+        {
+            var connectionString = $@"Data Source=(localdb)\v11.0;Integrated Security=True;User Instance=False;Initial Catalog={initialCatalog}";
+            SetupConnAndLogger(connectionString);
+        }
+        private void SetupConnAndLogger(string connectionString)
+        {
+            _logger = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<Logger>();
             sqlconn = new SqlConnection(connectionString);
-            //allVersions = GetDBState();
         }
 
         public string CheckDatabaseVersion()
         {
-            sqlconn.Open();
             var version = "0.0.0.0";
             try
             {
-                var data = ExecuteCommand("SELECT TOP 1 Version FROM DBVersion order by Date desc");
+                var data = ExecuteSingleCommand("SELECT TOP 1 Version FROM DBVersion order by Date desc");
                 data.Read();
                 version = data.GetString(0);
-                Logger.GetInstance().Log($"Found existing database version {version}");
+                _logger.Log($"Found existing database version {version}");
             }
             catch (Exception ex)
             {
                 CreateDBVersionTable();
             }
-            sqlconn.Close();
             return version;
         }
 
         private void CreateDBVersionTable()
         {
-            Logger.GetInstance().Log("Creating DBVersion table");
-            ExecuteCommand("CREATE TABLE DBVersion ([ID] [int] IDENTITY(1,1) NOT NULL, Version varchar(max) NOT NULL, Date datetime2 NOT NULL, Log xml NOT NULL, CONSTRAINT [PK_dbo.DBVersion] PRIMARY KEY CLUSTERED ([ID] ASC))");
-            ExecuteCommand("CREATE TABLE DBVersionScripts (DBVersionID int NOT NULL, Feature varchar(max) NOT NULL, [Order] int NOT NULL, Script varchar(max) NOT NULL, Type varchar(max) NOT NULL, [Checksum] varchar(max) NOT NULL, ExecutionTime int NOT NULL)");
-            ExecuteCommand("ALTER TABLE [DBVersionScripts] WITH CHECK ADD CONSTRAINT [FK.DBVersion.DBVersionScripts_DBVersionID] FOREIGN KEY([DBVersionID]) REFERENCES [DBVersion]([ID])");
+            _logger.Log("Creating DBVersion table");
+            ExecuteSingleCommand("CREATE TABLE DBVersion ([ID] [int] IDENTITY(1,1) NOT NULL, Version varchar(max) NOT NULL, Date datetime2 NOT NULL, Log xml NOT NULL, CONSTRAINT [PK_dbo.DBVersion] PRIMARY KEY CLUSTERED ([ID] ASC))");
+            ExecuteSingleCommand("CREATE TABLE DBVersionScripts (DBVersionID int NOT NULL, Feature varchar(max) NOT NULL, [Order] int NOT NULL, Script varchar(max) NOT NULL, Type varchar(max) NOT NULL, [Checksum] varchar(max) NOT NULL, ExecutionTime int NOT NULL)");
+            ExecuteSingleCommand("ALTER TABLE [DBVersionScripts] WITH CHECK ADD CONSTRAINT [FK.DBVersion.DBVersionScripts_DBVersionID] FOREIGN KEY([DBVersionID]) REFERENCES [DBVersion]([ID])");
         }
 
         public void UpdateDatabaseVersion(DBVersion version)
         {
             var versionStr = version.Version.ToString();
-            Logger.GetInstance().Log($"Updating DBVersion version to {versionStr}");
-            var data = ExecuteCommand($"INSERT INTO DBVersion (Version, Date, Log) OUTPUT Inserted.ID VALUES ('{versionStr}', GETUTCDATE(), '<xml>' + CHAR(13) + '{Logger.GetInstance().log.ToString()}</xml>')");
+            _logger.Log($"Updating DBVersion version to {versionStr}");
+            var data = ExecuteCommand($"INSERT INTO DBVersion (Version, Date, Log) OUTPUT Inserted.ID VALUES ('{versionStr}', GETUTCDATE(), '<xml>' + CHAR(13) + '{_logger.log.ToString()}</xml>')");
             using (data)
             {
                 data.Read();
@@ -64,7 +71,7 @@ namespace DBMigrator
 
         public void UpdateLog(DBVersion version)
         {
-            ExecuteCommand($"UPDATE DBVersion SET Log = '<xml>' + CHAR(13) + '{Logger.GetInstance().log.ToString()}</xml>' WHERE ID = {version.ID}");
+            ExecuteCommand($"UPDATE DBVersion SET Log = '<xml>' + CHAR(13) + '{_logger.log.ToString()}</xml>' WHERE ID = {version.ID}");
         }
 
         public void UpdateDataWithFile(Script script)
@@ -80,9 +87,15 @@ namespace DBMigrator
         public SqlDataReader ExecuteSingleCommand(string cmd)
         {
             sqlconn.Open();
-            var result = ExecuteCommand(cmd);
-            sqlconn.Close();
-            return result;
+            try
+            {
+                var result = ExecuteCommand(cmd);
+                return result;
+            }
+            finally
+            {
+                sqlconn.Close();
+            }
         }
 
         private SqlDataReader ExecuteCommand(string cmd)
@@ -257,7 +270,8 @@ namespace DBMigrator
 
         public void Dispose()
         {
-            sqlconn.Close();
+            if(sqlconn.State != System.Data.ConnectionState.Closed)
+                sqlconn.Close();
         }
     }
 }

@@ -14,19 +14,25 @@ namespace DBMigrator
         private DirectoryInfo _executingDirectory;
         public List<DBVersion> allVersions;
 
+
         public DBFolder(string executingDirectoryPath = null)
         {
             if (String.IsNullOrEmpty(executingDirectoryPath))
             {
-                //executingDirectory = new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
-                _executingDirectory = new DirectoryInfo(Path.GetDirectoryName(typeof(Validator).GetTypeInfo().Assembly.Location));
-                //executingDirectory = new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
+                _executingDirectory = GetExecutingDir();
             }
             else
             {
                 _executingDirectory = new DirectoryInfo(executingDirectoryPath);
             }
             allVersions = GetFolderState();
+        }
+
+        public static DirectoryInfo GetExecutingDir()
+        {
+            return new DirectoryInfo(Path.GetDirectoryName(typeof(Validator).GetTypeInfo().Assembly.Location));
+            //new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
+            //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
         public List<DBVersion> GetVersionsUpTo(string version)

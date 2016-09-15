@@ -194,7 +194,7 @@ namespace DBMigrator
                               , [IS_DETERMINISTIC]
                               , [SQL_DATA_ACCESS]
                               , [IS_NULL_CALL])) as StoredProceduresChecksum
-                         FROM[amphi].[INFORMATION_SCHEMA].[ROUTINES]
+                         FROM [INFORMATION_SCHEMA].[ROUTINES]
                         WHERE ROUTINE_TYPE = 'PROCEDURE'";
 
             return CheckSumHelper(query);
@@ -221,7 +221,7 @@ namespace DBMigrator
                               , [IS_DETERMINISTIC]
                               , [SQL_DATA_ACCESS]
                               , [IS_NULL_CALL])) as FunctionsChecksum
-                         FROM[amphi].[INFORMATION_SCHEMA].[ROUTINES]
+                         FROM [INFORMATION_SCHEMA].[ROUTINES]
                         WHERE ROUTINE_TYPE = 'FUNCTION'";
 
             return CheckSumHelper(query);
@@ -241,7 +241,6 @@ namespace DBMigrator
                               , [is_ms_shipped]
                               , [is_published]
                               , [is_schema_published]
-
                               , [definition])) as TriggersChecksum
                         FROM[sys].[all_objects]
                         INNER JOIN[sys].[sql_modules]

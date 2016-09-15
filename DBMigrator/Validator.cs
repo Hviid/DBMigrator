@@ -8,7 +8,11 @@ namespace DBMigrator
 {
     public class Validator
     {
-        //validates that everything in target, are correct against source
+        /// <summary>
+        /// Validates that everything in target, are correct against source
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
         public void ValidateVersions(List<DBVersion> source, List<DBVersion> target)
         {
             foreach (var targetVersion in target)

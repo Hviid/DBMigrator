@@ -1,9 +1,7 @@
 ﻿using DBMigrator.Model;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace DBMigrator
 {
@@ -33,6 +31,12 @@ namespace DBMigrator
             return str;
         }
 
+        /// <summary>
+        /// Creates a diff of migrations found in source, but not in target
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public List<DBVersion> Diff(List<DBVersion> source, List<DBVersion> target)
         {
             var diff = new List<DBVersion>();

@@ -22,7 +22,7 @@ namespace DBMigrator.Test
         }
 
         [TestMethod]
-        public void versions_noversions_test()
+        public void Versions_noversions_test()
         {
             var database = new Database("DBMigratorTest");
             var versions = database.GetDBState();

@@ -12,12 +12,30 @@ namespace DBMigrator.Test
     {
         private List<DBVersion> Database()
         {
-            throw new NotImplementedException();
+            var version = new DBVersion("1.0.0");
+            var feature = version.AddFeature("TestFeature");
+
+            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
+            feature.AddScript(script);
+
+            var version2 = new DBVersion("2.0.0");
+            var feature2 = version2.AddFeature("TestFeature2");
+
+            var script2 = new Script("TestScript2.sql", 1, Script.SQLTYPE.Upgrade, feature2);
+            feature2.AddScript(script2);
+
+            return new List<DBVersion> { version, version2 };
         }
 
         private List<DBVersion> Folder()
         {
-            throw new NotImplementedException();
+            var version = new DBVersion("1.0.0");
+            var feature = version.AddFeature("TestFeature");
+
+            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
+            feature.AddScript(script);
+
+            return new List<DBVersion> { version };
         }
 
         private List<DBVersion> ExpectedDiff()

@@ -37,10 +37,15 @@ namespace DBMigrator
             var version = "0.0.0.0";
             try
             {
-                var data = ExecuteSingleCommand("SELECT TOP 1 Version FROM DBVersion order by Date desc");
-                data.Read();
-                version = data.GetString(0);
-                _logger.Log($"Found existing database version {version}");
+                sqlconn.Open();
+                var data = ExecuteCommand("SELECT TOP 1 Version FROM DBVersion order by Date desc");
+                if (data.HasRows)
+                {
+                    data.Read();
+                    version = data.GetString(0);
+                    _logger.Log($"Found existing database version {version}");
+                }
+                sqlconn.Close();
             }
             catch (Exception ex)
             {
@@ -84,13 +89,12 @@ namespace DBMigrator
             ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
         }
 
-        public SqlDataReader ExecuteSingleCommand(string cmd)
+        public void ExecuteSingleCommand(string cmd)
         {
             sqlconn.Open();
             try
             {
-                var result = ExecuteCommand(cmd);
-                return result;
+                ExecuteCommand(cmd);
             }
             finally
             {

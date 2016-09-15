@@ -67,12 +67,15 @@ namespace DBMigrator
         {
             var versionStr = version.Version.ToString();
             _logger.Log($"Updating DBVersion version to {versionStr}");
+            sqlconn.Open();
             var data = ExecuteCommand($"INSERT INTO DBVersion (Version, Date, Log) OUTPUT Inserted.ID VALUES ('{versionStr}', GETUTCDATE(), '<xml>' + CHAR(13) + '{_logger.log.ToString()}</xml>')");
+            
             using (data)
             {
                 data.Read();
                 version.ID = data.GetInt32(0);
             }
+            sqlconn.Close();
         }
 
         public void UpdateLog(DBVersion version)
@@ -139,16 +142,10 @@ namespace DBMigrator
             CheckDatabaseVersion();
             sqlconn.Open();
             var result = new List<DBVersion>();
-            var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [Checksum], [ExecutionTime] FROM [DBVersion] INNER JOIN [DbversionScripts] ON [DBVersion].ID = [DbversionScripts].DBVersionID");
+            var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [Checksum], [ExecutionTime] FROM [DBVersion] LEFT JOIN [DbversionScripts] ON [DBVersion].ID = [DbversionScripts].DBVersionID");
             while (data.Read())
             {
                 var version = data.GetString(0);
-                var feature = data.GetString(1);
-                var order = data.GetInt32(2);
-                var script = data.GetString(3);
-                var type = data.GetString(4);
-                var checksum = data.GetString(5);
-                var executiontime = data.GetInt32(6);
 
                 var dbversion = result.FirstOrDefault(v => v.Name == version);
                 if (dbversion == null)
@@ -156,7 +153,19 @@ namespace DBMigrator
                     dbversion = new DBVersion(version);
                     result.Add(dbversion);
                 }
-                dbversion.AddOrUpdateFeature(feature, new Script(script, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null));
+
+                string feature = null;
+                if(!data.IsDBNull(1))
+                {
+                    feature = data.GetString(1);
+                    var order = data.GetInt32(2);
+                    var script = data.GetString(3);
+                    var type = data.GetString(4);
+                    var checksum = data.GetString(5);
+                    var executiontime = data.GetInt32(6);
+
+                    dbversion.AddOrUpdateFeature(feature, new Script(script, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null));
+                }
             }
             sqlconn.Close();
             return result;

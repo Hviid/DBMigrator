@@ -24,7 +24,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Versions_noversions_test()
         {
-            var database = new Database("DBMigratorTest");
+            var database = new Database("");
             var versions = database.GetDBState();
 
             Assert.AreEqual(0, versions.Count);

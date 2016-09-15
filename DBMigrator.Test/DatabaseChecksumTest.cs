@@ -12,9 +12,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void GetTablesViewsAndColumnsChecksum_doesnt_change()
         {
-            throw new NotImplementedException();
-            //TODO requires test database
-            var database = new Database("", "", "", "");
+            var database = new Database("");
             var checksum = database.GetTablesViewsAndColumnsChecksum();
             var checksum2 = database.GetTablesViewsAndColumnsChecksum();
             Assert.AreEqual(checksum, checksum2);
@@ -23,20 +21,25 @@ namespace DBMigrator.Test
         [TestMethod]
         public void TablesChecksum_changes()
         {
-            throw new NotImplementedException();
-            //TODO requires test database
-            var database = new Database("", "", "", "");
+            var database = new Database("");
             var checksum = database.GetTablesViewsAndColumnsChecksum();
-            database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTest]([Test][nvarchar](max) NULL)");
+            database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTable]([Test][nvarchar](max) NULL)");
             var checksum2 = database.GetTablesViewsAndColumnsChecksum();
-            database.ExecuteSingleCommand("DROP TABLE [dbo].[DBMigratorTest]");
+            database.ExecuteSingleCommand("DROP TABLE [dbo].[DBMigratorTable]");
             Assert.AreNotEqual(checksum, checksum2);
         }
 
         [TestMethod]
         public void ViewsChecksum_changes()
         {
-            throw new NotImplementedException();
+            var database = new Database("");
+            database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTable]([Test][nvarchar](max) NULL)");
+            var checksum = database.GetTablesViewsAndColumnsChecksum();
+            database.ExecuteSingleCommand("CREATE VIEW [dbo].DBMigratorView AS SELECT Test FROM [dbo].[DBMigratorTable]");
+            var checksum2 = database.GetTablesViewsAndColumnsChecksum();
+            database.ExecuteSingleCommand("DROP VIEW [dbo].[DBMigratorView]");
+            database.ExecuteSingleCommand("DROP TABLE [dbo].[DBMigratorTable]");
+            Assert.AreNotEqual(checksum, checksum2);
         }
 
         [TestMethod]

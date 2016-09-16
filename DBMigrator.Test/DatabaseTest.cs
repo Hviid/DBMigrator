@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using DBMigrator.Model;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -11,23 +12,29 @@ namespace DBMigrator.Test
     [TestClass]
     public class DatabaseTest
     {
-        public DatabaseTest()
-        {
-            Bootstrapper.ConfigureServices(new ServiceCollection());
-            //var path = Path.Combine(DBFolder.GetExecutingDir().FullName, "DBMigratorTest.mdf");
-            var database = new Database("");
-            //TO DO couldn't it just aswell do everything in the master database?
-            database.ExecuteSingleCommand("if db_id('DBMigratorTest') is null CREATE DATABASE DBMigratorTest");
-            database.Dispose();
-        }
-
         [TestMethod]
         public void Versions_noversions_test()
         {
-            var database = new Database("DBMigratorTest");
+            var database = new Database("");
+            database.ExecuteSingleCommand("DELETE FROM DBVersion");
             var versions = database.GetDBState();
 
             Assert.AreEqual(0, versions.Count);
+        }
+
+        [TestMethod]
+        public void Versions_one_versions_test()
+        {
+            var version = new DBVersion("1.0.0");
+
+            var database = new Database("");
+            database.ExecuteSingleCommand("DELETE FROM DBVersion");
+
+            database.UpdateDatabaseVersion(version);
+
+            var versions = database.GetDBState();
+
+            Assert.AreEqual(1, versions.Count);
         }
     }
 }

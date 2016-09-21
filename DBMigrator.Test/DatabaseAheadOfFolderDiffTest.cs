@@ -35,16 +35,15 @@ namespace DBMigrator.Test
             return new List<DBVersion> { version };
         }
 
-        private List<DBVersion> ExpectedDiff()
-        {
-            throw new NotImplementedException();
-        }
-
 
         [TestMethod]
-        public void Test()
+        public void No_diff_test()
         {
-            throw new NotImplementedException();
+            var differ = new VersionDiff();
+
+            var diff = differ.Diff(Folder(), Database());
+
+            Assert.AreEqual(0, diff.Count);
         }
     }
 }

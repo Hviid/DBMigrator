@@ -4,32 +4,64 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace DBMigrator.Test
 {
     [TestClass]
     public class EarlierVersionFolderAheadOfDatabaseDiffTest
     {
-        private List<DBVersion> Database()
-        {
-            throw new NotImplementedException();
-        }
-
         private List<DBVersion> Folder()
         {
-            throw new NotImplementedException();
+            var version = new DBVersion("1.0.0");
+            var feature = version.AddAndOrGetFeature("TestFeature");
+
+            feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+
+            var version2 = new DBVersion("2.0.0");
+            var feature2 = version2.AddAndOrGetFeature("TestFeature2");
+
+            feature2.AddScript("TestScript2.sql", 1, Script.SQLTYPE.Upgrade);
+
+            return new List<DBVersion> { version, version2 };
+        }
+
+        private List<DBVersion> Database()
+        {
+            var version = new DBVersion("1.0.0");
+            var feature = version.AddAndOrGetFeature("TestFeature");
+
+            feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+
+            return new List<DBVersion> { version };
         }
 
         private List<DBVersion> ExpectedDiff()
         {
-            throw new NotImplementedException();
+            var version2 = new DBVersion("2.0.0");
+            var feature2 = version2.AddAndOrGetFeature("TestFeature2");
+
+            feature2.AddScript("TestScript2.sql", 1, Script.SQLTYPE.Upgrade);
+
+            return new List<DBVersion> { version2 };
         }
 
 
         [TestMethod]
-        public void Test()
+        public void Diff_found_test()
         {
-            throw new NotImplementedException();
+            var differ = new VersionDiff();
+
+            var diff = differ.Diff(Folder(), Database());
+
+            Assert.AreEqual(1, diff.Count);
+            Assert.AreEqual(ExpectedDiff().First().Name, diff.First().Name);
+
+            Assert.AreEqual(1, diff.First().Features.Count);
+            Assert.AreEqual(ExpectedDiff().First().Features.First().Name, diff.First().Features.First().Name);
+
+            Assert.AreEqual(1, diff.First().Features.First().UpgradeScripts.Count);
+            Assert.AreEqual(ExpectedDiff().First().Features.First().Name, diff.First().Features.First().Name);
         }
     }
 }

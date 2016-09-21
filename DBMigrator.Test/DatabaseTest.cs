@@ -26,6 +26,7 @@ namespace DBMigrator.Test
         public void Versions_one_versions_test()
         {
             var version = new DBVersion("1.0.0");
+            version.AddAndOrGetFeature("Feature").AddScript("01_test.sql", 1, Script.SQLTYPE.Upgrade);
 
             var database = new Database("");
             database.ExecuteSingleCommand("DELETE FROM DBVersion");

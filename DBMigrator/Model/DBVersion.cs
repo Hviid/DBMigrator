@@ -31,7 +31,7 @@ namespace DBMigrator.Model
             }
         }
 
-        public Feature AddFeature(string featureName)
+        public Feature AddAndOrGetFeature(string featureName)
         {
             var feature = Features.FirstOrDefault(f => f.Name == featureName);
             if (feature == null)
@@ -40,13 +40,6 @@ namespace DBMigrator.Model
                 _features.Add(feature);
             }
             return feature;
-        }
-
-        public void AddOrUpdateFeature(string featureName, Script script)
-        {
-            var feature = AddFeature(featureName);
-            if (script != null)
-                feature.AddScript(script);
         }
         
         public int CompareTo(DBVersion obj)

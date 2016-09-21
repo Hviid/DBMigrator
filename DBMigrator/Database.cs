@@ -164,7 +164,7 @@ namespace DBMigrator
                     var checksum = data.GetString(5);
                     var executiontime = data.GetInt32(6);
 
-                    dbversion.AddOrUpdateFeature(feature, new Script(script, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type), null));
+                    dbversion.AddAndOrGetFeature(feature).AddScript(script, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type));
                 }
             }
             sqlconn.Close();

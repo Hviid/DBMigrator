@@ -13,11 +13,10 @@ namespace DBMigrator.Test
         private List<DBVersion> Baseline()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddFeature("TestFeature");
-
-            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
+            var feature = version.AddAndOrGetFeature("TestFeature");
+            
+            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
             script.Checksum = "A";
-            feature.AddScript(script);
 
             return new List<DBVersion> { version };
         }
@@ -25,11 +24,10 @@ namespace DBMigrator.Test
         private List<DBVersion> Same()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddFeature("TestFeature");
-
-            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
+            var feature = version.AddAndOrGetFeature("TestFeature");
+            
+            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
             script.Checksum = "A";
-            feature.AddScript(script);
 
             return new List<DBVersion> { version };
         }
@@ -37,11 +35,10 @@ namespace DBMigrator.Test
         private List<DBVersion> DiffChecksum()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddFeature("TestFeature");
-
-            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
+            var feature = version.AddAndOrGetFeature("TestFeature");
+            
+            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
             script.Checksum = "B";
-            feature.AddScript(script);
 
             return new List<DBVersion> { version };
         }
@@ -49,11 +46,10 @@ namespace DBMigrator.Test
         private List<DBVersion> DiffVersion()
         {
             var version = new DBVersion("1.0.1");
-            var feature = version.AddFeature("TestFeature");
-
-            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
+            var feature = version.AddAndOrGetFeature("TestFeature");
+            
+            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
             script.Checksum = "A";
-            feature.AddScript(script);
 
             return new List<DBVersion> { version };
         }

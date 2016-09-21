@@ -13,16 +13,14 @@ namespace DBMigrator.Test
         private List<DBVersion> Database()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddFeature("TestFeature");
-
-            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
-            feature.AddScript(script);
+            var feature = version.AddAndOrGetFeature("TestFeature");
+            
+            feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
 
             var version2 = new DBVersion("2.0.0");
-            var feature2 = version2.AddFeature("TestFeature2");
-
-            var script2 = new Script("TestScript2.sql", 1, Script.SQLTYPE.Upgrade, feature2);
-            feature2.AddScript(script2);
+            var feature2 = version2.AddAndOrGetFeature("TestFeature2");
+            
+            feature2.AddScript("TestScript2.sql", 1, Script.SQLTYPE.Upgrade);
 
             return new List<DBVersion> { version, version2 };
         }
@@ -30,10 +28,9 @@ namespace DBMigrator.Test
         private List<DBVersion> Folder()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddFeature("TestFeature");
-
-            var script = new Script("TestScript.sql", 1, Script.SQLTYPE.Upgrade, feature);
-            feature.AddScript(script);
+            var feature = version.AddAndOrGetFeature("TestFeature");
+            
+            feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
 
             return new List<DBVersion> { version };
         }

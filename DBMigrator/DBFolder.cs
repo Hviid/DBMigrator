@@ -58,7 +58,7 @@ namespace DBMigrator
             var featureFolders = GetVersionDirectory(version).GetDirectories();
             foreach (var featureFolder in featureFolders)
             {
-                version.AddFeature(featureFolder.Name);
+                version.AddAndOrGetFeature(featureFolder.Name);
             }
             foreach (var feature in version.Features)
             {
@@ -80,7 +80,7 @@ namespace DBMigrator
                 {
                     var order = int.Parse(match.Groups[1].Value);
                     
-                    feature.AddScript(new Script(scriptName, order, Script.SQLTYPE.Upgrade, feature));
+                    feature.AddScript(scriptName, order, Script.SQLTYPE.Upgrade);
                 }
                 else if (!Regex.IsMatch(scriptName, Script.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
                 {

@@ -13,11 +13,10 @@ namespace DBMigrator.Test
         private List<DBVersion> Folder()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddFeature("TestFeature");
-
-            var script = new Script("01_Test.sql", 1, Script.SQLTYPE.Upgrade, feature);
+            var feature = version.AddAndOrGetFeature("TestFeature");
+            
+            var script = feature.AddScript("01_Test.sql", 1, Script.SQLTYPE.Upgrade);
             script.Checksum = "A";
-            feature.AddScript(script);
 
             return new List<DBVersion> { version };
         }

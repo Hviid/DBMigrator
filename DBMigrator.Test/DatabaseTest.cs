@@ -16,6 +16,7 @@ namespace DBMigrator.Test
         public void Versions_noversions_test()
         {
             var database = new Database("");
+            database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
             database.ExecuteSingleCommand("DELETE FROM DBVersion");
             var versions = database.GetDBState();
 

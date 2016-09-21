@@ -87,10 +87,10 @@ namespace DBMigrator
         {
             var sw = new Stopwatch();
             sw.Start();
-            ExecuteCommand(script.SQL);
+            ExecuteSingleCommand(script.SQL);
             sw.Stop();
             script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
-            ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
+            ExecuteSingleCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
         }
 
         public void ExecuteSingleCommand(string cmd)
@@ -159,12 +159,14 @@ namespace DBMigrator
                 {
                     feature = data.GetString(1);
                     var order = data.GetInt32(2);
-                    var script = data.GetString(3);
+                    var scriptFileName = data.GetString(3);
                     var type = data.GetString(4);
                     var checksum = data.GetString(5);
                     var executiontime = data.GetInt32(6);
 
-                    dbversion.AddAndOrGetFeature(feature).AddScript(script, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type));
+                    var script = dbversion.AddAndOrGetFeature(feature).AddScript(scriptFileName, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type));
+                    script.Checksum = checksum;
+                    script.ExecutionTime = executiontime;
                 }
             }
             sqlconn.Close();

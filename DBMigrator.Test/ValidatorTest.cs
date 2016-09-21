@@ -54,6 +54,28 @@ namespace DBMigrator.Test
             return new List<DBVersion> { version };
         }
 
+        private List<DBVersion> DiffFeature()
+        {
+            var version = new DBVersion("1.0.0");
+            var feature = version.AddAndOrGetFeature("TestFeature2");
+
+            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            script.Checksum = "A";
+
+            return new List<DBVersion> { version };
+        }
+
+        private List<DBVersion> DiffScript()
+        {
+            var version = new DBVersion("1.0.0");
+            var feature = version.AddAndOrGetFeature("TestFeature");
+
+            var script = feature.AddScript("TestScript2.sql", 1, Script.SQLTYPE.Upgrade);
+            script.Checksum = "A";
+
+            return new List<DBVersion> { version };
+        }
+
         [TestMethod]
         public void Test_nodiff()
         {
@@ -81,13 +103,17 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_feature()
         {
-            throw new NotImplementedException();
+            var validator = new Validator();
+
+            Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffFeature()));
         }
 
         [TestMethod]
         public void Test_Diff_script()
         {
-            throw new NotImplementedException();
+            var validator = new Validator();
+
+            Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffScript()));
         }
     }
 }

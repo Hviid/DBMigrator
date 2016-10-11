@@ -40,6 +40,7 @@ namespace DBMigrator.Console
                     validator1.ValidateVersions(dbfolder1.allVersions, dbVersions1);
                     var differ1 = new VersionDiff();
                     var diff1 = differ1.Diff(dbVersions1, dbfolder1.GetVersionsUpTo(args[1]));
+                    dbfolder1.AddRollbacks(diff1);
                     var diffText1 = differ1.DiffText(diff1);
                     logger.LogInformation(diffText1);
                     System.Console.ReadKey();

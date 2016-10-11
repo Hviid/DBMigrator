@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace DBMigrator
 {
@@ -80,7 +81,11 @@ namespace DBMigrator
                 {
                     var order = int.Parse(match.Groups[1].Value);
                     
-                    feature.AddScript(scriptName, order, Script.SQLTYPE.Upgrade);
+                    var script = feature.AddScript(scriptName, order, Script.SQLTYPE.Upgrade);
+                    var filePath = Path.Combine(migrationsPath, scriptName);
+                    script.SQL = GetFileContent(filePath);
+                    script.Checksum = GetFileChecksum(filePath);
+                    script.RollbackScript = FindRollback(script);
                 }
                 else if (!Regex.IsMatch(scriptName, Script.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
                 {
@@ -100,17 +105,51 @@ namespace DBMigrator
             return Path.Combine(versionFolderPath, feature.Name);
         }
 
-        public Script FindRollback(Script upgradeScript)
+        public void AddRollbacks(List<DBVersion> versions)
+        {
+            foreach (var version in versions)
+            {
+                foreach (var feature in version.Features)
+                {
+                    foreach (var script in feature.UpgradeScripts)
+                    {
+                        script.RollbackScript = FindRollback(script);
+                    }
+                }
+            }
+        }
+
+        private Script FindRollback(Script upgradeScript)
         {
             var match = Regex.Match(upgradeScript.FileName, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
 
             var rollbackFileName = $"{match.Groups[1]}_rollback_{match.Groups[2]}.sql";
-            
-            if (System.IO.File.Exists(Path.Combine(GetFeaturePath(upgradeScript.Feature), rollbackFileName)))
+
+            var filePath = Path.Combine(GetFeaturePath(upgradeScript.Feature), "Migrations", rollbackFileName);
+            if (System.IO.File.Exists(filePath))
             {
-                return new Script(rollbackFileName, upgradeScript.Order, Script.SQLTYPE.Rollback, upgradeScript.Feature);
+                var rollbackScript =  new Script(rollbackFileName, upgradeScript.Order, Script.SQLTYPE.Rollback, upgradeScript.Feature);
+                rollbackScript.RollbackScript = upgradeScript;
+                rollbackScript.SQL = GetFileContent(filePath);
+                rollbackScript.Checksum = GetFileChecksum(filePath);
+                return rollbackScript;
             }
             return null;
+        }
+
+        private string GetFileChecksum(string filePath)
+        {
+            using (var stream = new BufferedStream(System.IO.File.OpenRead(filePath), 1200000))
+            {
+                SHA256 sha = SHA256.Create();
+                byte[] checksum = sha.ComputeHash(stream);
+                return BitConverter.ToString(checksum).Replace("-", String.Empty);
+            }
+        }
+
+        private string GetFileContent(string filePath)
+        {
+            return System.IO.File.ReadAllText(filePath);
         }
     }
 }

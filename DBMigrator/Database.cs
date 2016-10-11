@@ -266,6 +266,24 @@ namespace DBMigrator
             return CheckSumHelper(query);
         }
 
+        public int GetIndexesChecksum()
+        {
+            var query = @"SELECT
+                        CHECKSUM_AGG(CHECKSUM
+                        ([CONSTRAINT_CATALOG]
+                          ,[CONSTRAINT_SCHEMA]
+                          ,[CONSTRAINT_NAME]
+                          ,[TABLE_CATALOG]
+                          ,[TABLE_SCHEMA]
+                          ,[TABLE_NAME]
+                          ,[CONSTRAINT_TYPE]
+                          ,[IS_DEFERRABLE]
+                          ,[INITIALLY_DEFERRED])) as IndexesChecksum
+                        FROM [INFORMATION_SCHEMA].[TABLE_CONSTRAINTS]";
+
+            return CheckSumHelper(query);
+        }
+
         private int CheckSumHelper(string query)
         {
             var result = 0;

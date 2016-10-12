@@ -75,7 +75,12 @@ namespace DBMigrator
                             [Order] int NOT NULL, 
                             Script varchar(max) NOT NULL, 
                             Type varchar(max) NOT NULL, 
-                            [Checksum] varchar(max) NOT NULL, 
+                            [ScriptFileChecksum] varchar(max) NOT NULL, 
+                            [DatabaseTriggersChecksum] varchar(max) NOT NULL, 
+                            [DatabaseTablesAndViewsChecksum] varchar(max) NOT NULL, 
+                            [DatabaseFunctionsChecksum] varchar(max) NOT NULL, 
+                            [DatabaseStoredProceduresChecksum] varchar(max) NOT NULL, 
+                            [DatabaseIndexesChecksum] varchar(max) NOT NULL, 
                             ExecutionTime int NOT NULL)");
         }
 
@@ -104,8 +109,39 @@ namespace DBMigrator
             ExecuteCommand(script.SQL);
             sw.Stop();
             script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
+            var databaseTriggersChecksum = GetTriggersChecksum();
+            var databaseTablesAndViewsChecksum = GetTablesViewsAndColumnsChecksum();
+            var databaseFunctionsChecksum = GetFunctionsChecksum();
+            var databaseStoredProceduresChecksum = GetStoredProceduresChecksum();
+            var databaseIndexesChecksum = GetIndexesChecksum();
             //ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
-            ExecuteCommand($"INSERT INTO DBVersionScripts ([Version], [Date], [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.Name}',GETUTCDATE() , {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
+            ExecuteCommand($@"INSERT INTO DBVersionScripts (
+                                                [Version], 
+                                                [Date], 
+                                                [Order], 
+                                                Feature, 
+                                                Script, 
+                                                Type, 
+                                                ScriptFileChecksum, 
+                                                DatabaseTriggersChecksum, 
+                                                DatabaseTablesAndViewsChecksum, 
+                                                DatabaseFunctionsChecksum, 
+                                                DatabaseStoredProceduresChecksum, 
+                                                DatabaseIndexesChecksum, 
+                                                ExecutionTime) VALUES (
+                                                '{script.Feature.Version.Name}',
+                                                GETUTCDATE(), 
+                                                {script.Order}, 
+                                                '{script.Feature.Name}', 
+                                                '{script.FileName}', 
+                                                '{script.Type.ToString()}', 
+                                                '{script.Checksum}', 
+                                                '{databaseTriggersChecksum}', 
+                                                '{databaseTablesAndViewsChecksum}', 
+                                                '{databaseFunctionsChecksum}', 
+                                                '{databaseStoredProceduresChecksum}', 
+                                                '{databaseIndexesChecksum}', 
+                                                {script.ExecutionTime})");
         }
 
         public void DowngradeDataWithFile(Script script)
@@ -164,7 +200,7 @@ namespace DBMigrator
             sqlconn.Open();
             var result = new List<DBVersion>();
             //var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [Checksum], [ExecutionTime] FROM [DBVersion] LEFT JOIN [DbversionScripts] ON [DBVersion].ID = [DbversionScripts].DBVersionID");
-            var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [Checksum], [ExecutionTime] FROM [DBVersionScripts]");
+            var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [ScriptFileChecksum], [ExecutionTime] FROM [DBVersionScripts]");
             while (data.Read())
             {
                 var version = data.GetString(0);

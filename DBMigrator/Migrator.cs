@@ -32,10 +32,12 @@ namespace DBMigrator
                 _logger.Log("No downgrades found");
             }
 
-            foreach (var rollbackToVersion in versionsToRollback)
+            try
             {
+                foreach (var rollbackToVersion in versionsToRollback)
+                {
                 _logger.Log($"Downgrading to version {rollbackToVersion.Name}");
-                try {
+                
 
                     _database.UpdateDatabaseVersion(rollbackToVersion);
 
@@ -48,12 +50,10 @@ namespace DBMigrator
 
                     //throw "test"
                     _database.CommitTransaction();
-                } catch(Exception ex) {
-                    throw ex;
                 }
-                finally {
-                    _database.RollbackTransaction();
-                }
+            } catch (Exception ex) {
+                _logger.Log(ex.Message);
+                _database.RollbackTransaction();
             }
 
             _database.Close();
@@ -99,7 +99,7 @@ namespace DBMigrator
             foreach (var script in feature.RollbackScripts)
             {
                 _logger.Log($"--------Running script: {script.FileName}");
-                _database.UpdateDataWithFile(script);
+                _database.DowngradeDataWithFile(script);
             }
         }
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static DBMigrator.Model.Script;
 
 namespace DBMigrator.Model
 {
@@ -32,12 +33,15 @@ namespace DBMigrator.Model
             Version = version;
         }
 
-        public void AddScript(Script script)
+        public Script AddScript(string ScriptFile, int order, SQLTYPE type)
         {
-            if (UpgradeScripts.Select(u => u.Order).Contains(script.Order))
-                throw new Exception($"Could not add script {script.FileName}, a script with {script.Order} already exists");
+            if (UpgradeScripts.Select(u => u.Order).Contains(order))
+                throw new Exception($"Could not add script {ScriptFile}, a script with {order} already exists");
+
+            var script = new Script(ScriptFile, order, type, this);
 
             _upgradeScripts.Add(script);
+            return script;
         }
     }
 }

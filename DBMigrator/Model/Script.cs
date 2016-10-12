@@ -27,6 +27,7 @@ namespace DBMigrator.Model
             FileName = ScriptFile;
             Feature = feature;
             Order = order;
+            Type = type;
 
             if (!_migrationTypes.Contains(type))
             {
@@ -40,7 +41,7 @@ namespace DBMigrator.Model
         public SQLTYPE Type { get; }
         public string Checksum { get; set; }
         public int ExecutionTime { get; set; }
-        public Script RollbackScript { get; private set; }
+        public Script RollbackScript { get; set; }
         public string SQL { get; set; }
     }
 }

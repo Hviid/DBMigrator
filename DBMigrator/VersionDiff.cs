@@ -78,7 +78,7 @@ namespace DBMigrator
                             var diffFeature = diffVersion.Features.SingleOrDefault(t => t.Name == targetFeature.Name);
                             if (diffFeature == null)
                             {
-                                diffVersion.AddFeature(targetFeature.Name);
+                                diffVersion.AddAndOrGetFeature(targetFeature.Name);
                             }
                             CopyScriptToFeature(sourceScript, diffFeature);
                         }
@@ -90,7 +90,7 @@ namespace DBMigrator
 
         private void CopyFeatureToVersion(Feature sourceFeature, DBVersion target)
         {
-            var feature = target.AddFeature(sourceFeature.Name);
+            var feature = target.AddAndOrGetFeature(sourceFeature.Name);
             foreach (var script in sourceFeature.UpgradeScripts)
             {
                 CopyScriptToFeature(script, feature);
@@ -100,8 +100,8 @@ namespace DBMigrator
 
         private void CopyScriptToFeature(Script sourceScript, Feature target)
         {
-            var script = new Script(sourceScript.FileName, sourceScript.Order, sourceScript.Type, target);
-            target.AddScript(script);
+            var script = target.AddScript(sourceScript.FileName, sourceScript.Order, sourceScript.Type);
+            script.SQL = sourceScript.SQL;
         }
 
     }

@@ -6,6 +6,7 @@ using DBMigrator.Model;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using System.Security.Cryptography;
 
 namespace DBMigrator
 {
@@ -230,21 +231,19 @@ namespace DBMigrator
             sqlconn.Close();
             return result;
         }
-
-        public int GetTablesViewsAndColumnsChecksum()
+        //http://www.bidn.com/blogs/TomLannen/bidn-blog/2265/using-hashbytes-to-compare-columns
+        public string GetTablesViewsAndColumnsChecksum()
         {
-            var query = @"SELECT
-                        CHECKSUM_AGG(CHECKSUM
-                        (TABLE_SCHEMA
-                        , DATA_TYPE
-                        , TABLE_NAME
-                        , COLUMN_NAME
-                        , NUMERIC_PRECISION
-                        , DATETIME_PRECISION
-                        , CHARACTER_MAXIMUM_LENGTH)) as TablesViewsAndColumnsChecksum
-                         FROM INFORMATION_SCHEMA.COLUMNS";
+            var query = @"SELECT HASHBYTES('SHA1', TABLE_SCHEMA + '|' 
+						+ DATA_TYPE + '|' 
+						+ TABLE_NAME + '|' 
+						+ COLUMN_NAME + '|' 
+						+ CAST(ISNULL(NUMERIC_PRECISION, 0) as varchar(max)) + '|' 
+						+ CAST(ISNULL(DATETIME_PRECISION, 0) as varchar(max)) + '|' 
+						+ CAST(ISNULL(CHARACTER_MAXIMUM_LENGTH, 0) as varchar(max)) + '|' 
+                        ) FROM INFORMATION_SCHEMA.COLUMNS";
             
-            return CheckSumHelper(query);
+            return CheckSumHelper2(query);
         }
 
         public int GetStoredProceduresChecksum()
@@ -345,16 +344,43 @@ namespace DBMigrator
         private int CheckSumHelper(string query)
         {
             var result = 0;
-            sqlconn.Open();
+            //sqlconn.Open();
             var data = ExecuteCommand(query);
             
             using (data)
             {
                 data.Read();
-                result = data.GetInt32(0);
+                if(!data.IsDBNull(0))
+                    result = data. GetInt32(0);
             }
-            sqlconn.Close();
+            //sqlconn.Close();
             return result;
+        }
+
+        private string CheckSumHelper2(string query)
+        {
+            var result = 0;
+            //sqlconn.Open();
+            var data = ExecuteCommand(query);
+
+            var sha = SHA256.Create();
+            var memStream = new MemoryStream();
+
+            using (data)
+            {
+                while(data.Read())
+                {
+                    using (var dbStream = data.GetStream(0))
+                    {
+                        dbStream.CopyTo(memStream);
+                    }
+                }
+            }
+
+            var hash = sha.ComputeHash(memStream.ToArray());
+
+            //sqlconn.Close();
+            return System.Text.Encoding.UTF8.GetString(hash);
         }
 
 

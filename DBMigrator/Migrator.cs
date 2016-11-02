@@ -99,7 +99,7 @@ namespace DBMigrator
             foreach (var script in feature.RollbackScripts)
             {
                 _logger.Log($"--------Running script: {script.FileName}");
-                _database.DowngradeDataWithFile(script);
+                _database.DatabaseSchema.DowngradeDataWithFile(script);
             }
         }
 
@@ -109,7 +109,13 @@ namespace DBMigrator
             foreach (var script in feature.UpgradeScripts)
             {
                 _logger.Log($"--------Running script: {script.FileName}");
-                _database.UpdateDataWithFile(script);
+                _database.DatabaseSchema.UpdateDataWithFile(script);
+            }
+
+            foreach (var script in feature.FuncsSPsViewsTriggers)
+            {
+                _logger.Log($"--------Running script: {script.FileName}");
+                _database.DatabaseFuncViewStoredProcedureTrigger.UpdateDataWithFile(script);
             }
         }
 

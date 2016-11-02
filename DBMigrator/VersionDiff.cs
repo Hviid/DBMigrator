@@ -22,7 +22,13 @@ namespace DBMigrator
                 foreach (var feature in version.Features)
                 {
                     str += $"--feature: {feature.Name} \n";
+                    str += $"---Upgrades: \n";
                     foreach (var script in feature.UpgradeScripts)
+                    {
+                        str += $"----script: {script.FileName} \n";
+                    }
+                    str += $"---FuncsSPsViewsTriggers: \n";
+                    foreach (var script in feature.FuncsSPsViewsTriggers)
                     {
                         str += $"----script: {script.FileName} \n";
                     }
@@ -63,9 +69,9 @@ namespace DBMigrator
                         continue;
                     }
 
-                    foreach (var sourceScript in sourceFeature.UpgradeScripts)
+                    foreach (var sourceUpgradeScript in sourceFeature.UpgradeScripts)
                     {
-                        var targetScript = targetFeature.UpgradeScripts.SingleOrDefault(s => s.FileName == sourceScript.FileName);
+                        var targetScript = targetFeature.UpgradeScripts.SingleOrDefault(s => s.FileName == sourceUpgradeScript.FileName);
                         if (targetScript == null)
                         {
                             var diffVersion = diff.SingleOrDefault(t => t.Name == targetVersion.Name);
@@ -80,7 +86,28 @@ namespace DBMigrator
                             {
                                 diffVersion.AddAndOrGetFeature(targetFeature.Name);
                             }
-                            CopyScriptToFeature(sourceScript, diffFeature);
+                            CopyUpgradeScriptToFeature(sourceUpgradeScript, diffFeature);
+                        }
+                    }
+
+                    foreach (var sourceFuncsSPsViewsTriggersScript in sourceFeature.FuncsSPsViewsTriggers)
+                    {
+                        var targetScript = targetFeature.FuncsSPsViewsTriggers.SingleOrDefault(s => s.FileName == sourceFuncsSPsViewsTriggersScript.FileName);
+                        if (targetScript == null)
+                        {
+                            var diffVersion = diff.SingleOrDefault(t => t.Name == targetVersion.Name);
+                            if (diffVersion == null)
+                            {
+                                diffVersion = new DBVersion(targetVersion.Name);
+                                diff.Add(diffVersion);
+                            }
+
+                            var diffFeature = diffVersion.Features.SingleOrDefault(t => t.Name == targetFeature.Name);
+                            if (diffFeature == null)
+                            {
+                                diffVersion.AddAndOrGetFeature(targetFeature.Name);
+                            }
+                            CopyFuncsSPsViewsTriggersScriptToFeature(sourceFuncsSPsViewsTriggersScript, diffFeature);
                         }
                     }
                 }
@@ -93,16 +120,26 @@ namespace DBMigrator
             var feature = target.AddAndOrGetFeature(sourceFeature.Name);
             foreach (var script in sourceFeature.UpgradeScripts)
             {
-                CopyScriptToFeature(script, feature);
+                CopyUpgradeScriptToFeature(script, feature);
             }
-            
+
+            foreach (var script in sourceFeature.FuncsSPsViewsTriggers)
+            {
+                CopyFuncsSPsViewsTriggersScriptToFeature(script, feature);
+            }
+
         }
 
-        private void CopyScriptToFeature(Script sourceScript, Feature target)
+        private void CopyUpgradeScriptToFeature(UpgradeScript sourceScript, Feature target)
         {
-            var script = target.AddScript(sourceScript.FileName, sourceScript.Order, sourceScript.Type);
+            var script = target.AddUpgradeScript(sourceScript.FileName, sourceScript.Order);
             script.SQL = sourceScript.SQL;
         }
 
+        private void CopyFuncsSPsViewsTriggersScriptToFeature(FuncViewStoredProcedureTriggerScript sourceScript, Feature target)
+        {
+            var script = target.AddFuncViewStoredProcedureTriggerScript(sourceScript.FileName, sourceScript.Type, sourceScript.Name, sourceScript.Order);
+            script.SQL = sourceScript.SQL;
+        }
     }
 }

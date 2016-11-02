@@ -27,7 +27,7 @@ namespace DBMigrator.Test
         public void Versions_one_versions_test()
         {
             var version = new DBVersion("1.0.0");
-            var script = version.AddAndOrGetFeature("Feature").AddScript("01_test.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = version.AddAndOrGetFeature("Feature").AddUpgradeScript("01_test.sql", 1);
             script.Checksum = "A";
             script.SQL = "SELECT * FROM DBVersion";
 
@@ -36,8 +36,8 @@ namespace DBMigrator.Test
             database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
             database.ExecuteSingleCommand("DELETE FROM DBVersion");
 
-            database.UpdateDatabaseVersion(version);
-            database.UpdateDataWithFile(script);
+            //database.DatabaseSchema.UpdateDatabaseVersion(version);
+            database.DatabaseSchema.UpdateDataWithFile(script);
 
             var versions = database.GetDBState();
 

@@ -15,7 +15,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -26,7 +26,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -37,7 +37,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "B";
 
             return new List<DBVersion> { version };
@@ -48,7 +48,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.1");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -59,7 +59,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature2");
 
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -70,7 +70,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
 
-            var script = feature.AddScript("TestScript2.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript2.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };

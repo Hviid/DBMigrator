@@ -20,6 +20,7 @@ namespace DBMigrator.Console
                 case "upgrade":
                     var database = new Database(args[1], args[2], args[3], args[4]);
                     var dbfolder = new DBFolder();
+                    logger.LogDebug($"Reading from {DBFolder.GetExecutingDir().FullName}");
                     var validator = new Validator();
                     var dbVersions = database.GetDBState();
                     validator.ValidateVersions(dbfolder.allVersions, dbVersions);

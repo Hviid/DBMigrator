@@ -31,14 +31,26 @@ namespace DBMigrator
 
         public static DirectoryInfo GetExecutingDir()
         {
-            return new DirectoryInfo(Path.GetDirectoryName(typeof(Validator).GetTypeInfo().Assembly.Location));
+            return new DirectoryInfo(Path.GetDirectoryName(typeof(VersionValidator).GetTypeInfo().Assembly.Location));
             //new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
             //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
-        public List<DBVersion> GetVersionsUpTo(string version)
+        public List<DBVersion> GetVersions(string upToVersionStr)
         {
-            var upToVersion = new Version(version);
+            if(string.IsNullOrEmpty(upToVersionStr))
+                return allVersions.ToList();
+
+            Version upToVersion;
+            try
+            {
+                upToVersion = new Version(upToVersionStr);
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException($"Could not parse {upToVersionStr} into Version object", nameof(upToVersionStr));
+            }
+            
             return allVersions.Where(v => v.Version <= upToVersion).ToList();
         }
 

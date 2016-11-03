@@ -30,7 +30,6 @@ namespace DBMigrator
                 {
                     data.Read();
                     version = data.GetString(0);
-                    _logger.Log($"Found existing database version {version}");
                 }
                 _database.Sqlconn.Close();
             }
@@ -116,13 +115,12 @@ namespace DBMigrator
         {
             CheckDatabaseVersion();
             _database.Sqlconn.Open();
-            var result = new List<DBVersion>();
-            var data = _database.ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [ScriptFileChecksum], [ExecutionTime] FROM [DBFuncViewStoredProcedureTriggerScripts]");
+            var data = _database.ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [Name], [ScriptFileChecksum], [ExecutionTime] FROM [DBFuncViewStoredProcedureTriggerScripts]");
             while (data.Read())
             {
                 var version = data.GetString(0);
 
-                var dbversion = result.FirstOrDefault(v => v.Name == version);
+                var dbversion = versions.FirstOrDefault(v => v.Name == version);
                 if (dbversion == null)
                 {
                     throw new Exception($"Could not find version {version}");

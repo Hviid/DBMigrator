@@ -79,7 +79,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_nodiff()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             validator.ValidateVersions(Baseline(), Same());
         }
@@ -87,7 +87,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_checksum()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffChecksum()));
         }
@@ -95,7 +95,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_version()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffVersion()));
         }
@@ -103,7 +103,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_feature()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffFeature()));
         }
@@ -111,7 +111,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_script()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffScript()));
         }

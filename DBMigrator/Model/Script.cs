@@ -16,7 +16,7 @@ namespace DBMigrator.Model
         public const string CREATE_TRIGGERS_REGEX = @"CREATE\s+TRIGGER\s+(\w+)";
         public const string CREATE_VIEWS_REGEX = @"CREATE\s+VIEW\s+(\w+)";
         public const string ILLEGAL_REGEX = @"ALTER";
-        public const string bla = @"CREATE (FUNCTION|STORED PROCEDURE|VIEW|TRIGGER) (\w+)";
+        public const string bla = @"CREATE (FUNCTION|PROCEDURE|VIEW|TRIGGER) (\w+)";
         
         public Feature Feature { get; }
 

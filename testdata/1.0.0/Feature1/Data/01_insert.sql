@@ -1,0 +1,1 @@
+INSERT INTO Tester (PersonID, LastName) VALUES (2, 'INSERT')

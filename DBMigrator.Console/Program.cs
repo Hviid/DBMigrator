@@ -14,14 +14,14 @@ namespace DBMigrator.Console
         {
             CommandLineApplication commandLineApplication = new CommandLineApplication(throwOnUnexpectedArg: false);
             commandLineApplication.HelpOption("-? | -h | --help");
-            CommandArgument names = null;
-            var test2 = commandLineApplication.Command("name",
-                (target) =>
-                names = target.Argument(
-                    "fullname",
-                    "Enter the full name of the person to be greeted.",
-                    multipleValues: true));
-            test2.HelpOption("-? | -h | --help");
+            //CommandArgument names = null;
+            //var test2 = commandLineApplication.Command("name",
+            //    (target) =>
+            //    names = target.Argument(
+            //        "fullname",
+            //        "Enter the full name of the person to be greeted.",
+            //        multipleValues: true));
+            //test2.HelpOption("-? | -h | --help");
             var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validate>", "Command to execute");
 
             CommandOption versionArg = commandLineApplication.Option(
@@ -60,10 +60,6 @@ namespace DBMigrator.Console
             var test = serviceCollection.BuildServiceProvider();
             var loggerFactory = test.GetRequiredService<ILoggerFactory>();
             _logger = loggerFactory.CreateLogger<Program>();
-
-            test2.OnExecute(() => {
-                return 0;
-            });
 
             commandLineApplication.OnExecute(() =>
             {

@@ -105,10 +105,10 @@ namespace DBMigrator
                                                 {script.ExecutionTime})");
         }
 
-        public void DowngradeDataWithFile(Script script)
+        public void DowngradeDataWithFile(DowngradeScript script)
         {
             _database.ExecuteCommand(script.SQL);
-            _database.ExecuteCommand($"DELETE FROM DBFuncViewStoredProcedureTriggerScripts WHERE Script = '{script.RollbackScript.FileName}'");
+            _database.ExecuteCommand($"DELETE FROM DBFuncViewStoredProcedureTriggerScripts WHERE Script = '{script.FileName}'");
         }
 
         public void AppendDatabaseFuncViewStoredProcedureTriggerState(List<DBVersion> versions)

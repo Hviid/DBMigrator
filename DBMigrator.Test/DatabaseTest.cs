@@ -37,7 +37,7 @@ namespace DBMigrator.Test
             database.ExecuteSingleCommand("DELETE FROM DBVersion");
 
             //database.DatabaseSchema.UpdateDatabaseVersion(version);
-            database.DatabaseSchema.UpdateDataWithFile(script);
+            database.UpgradeSchema(script);
 
             var versions = database.GetDBState();
 

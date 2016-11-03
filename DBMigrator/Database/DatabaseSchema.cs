@@ -113,10 +113,10 @@ namespace DBMigrator
                                                 {script.ExecutionTime})");
         }
 
-        public void DowngradeDataWithFile(Script script)
+        public void DowngradeDataWithFile(DowngradeScript script)
         {
             _database.ExecuteCommand(script.SQL);
-            _database.ExecuteCommand($"DELETE FROM DBVersionScripts WHERE Script = '{script.RollbackScript.FileName}'");
+            _database.ExecuteCommand($"DELETE FROM DBVersionScripts WHERE Script = '{script.FileName}'");
         }
 
         public List<DBVersion> GetDBState()

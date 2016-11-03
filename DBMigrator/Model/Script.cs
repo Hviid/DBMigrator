@@ -8,7 +8,7 @@ namespace DBMigrator.Model
 {
     public class Script
     {
-        public const string FuncViewStoredProcedureTrigger_FILENAME_REGEX = @"(\d+)_(\w+)";
+        public const string ORDERED_FILENAME_REGEX = @"(\d+)_(\w+)";
         public const string MIGRATIONS_UPGRADE_FILENAME_REGEX = @"(\d+)_(?!rollback)(\w+)";
         public const string MIGRATIONS_ROLLBACK_FILENAME_REGEX = @"(\d+)_(rollback)(\w+)";
         public const string CREATE_STORED_PROCEDURE_REGEX = @"CREATE\s+PROCEDURE\s+(\w+)";
@@ -16,7 +16,7 @@ namespace DBMigrator.Model
         public const string CREATE_TRIGGERS_REGEX = @"CREATE\s+TRIGGER\s+(\w+)";
         public const string CREATE_VIEWS_REGEX = @"CREATE\s+VIEW\s+(\w+)";
         public const string ILLEGAL_REGEX = @"ALTER";
-        public const string bla = @"CREATE (FUNCTION|PROCEDURE|VIEW|TRIGGER) (\w+)";
+        public const string FUNC_PROCEDURE_VIEW_TRIGGER_REGEX = @"CREATE (FUNCTION|PROCEDURE|VIEW|TRIGGER) (\w+)";
         
         public Feature Feature { get; }
 
@@ -33,7 +33,7 @@ namespace DBMigrator.Model
         public string FileName { get; }
         public string Checksum { get; set; }
         public int ExecutionTime { get; set; }
-        public Script RollbackScript { get; set; }
+        public DowngradeScript RollbackScript { get; set; }
         public string SQL { get; set; }
     }
 }

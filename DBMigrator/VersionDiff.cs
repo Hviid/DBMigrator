@@ -28,7 +28,7 @@ namespace DBMigrator
                         str += $"----script: {script.FileName} \n";
                     }
                     str += $"---FuncsSPsViewsTriggers: \n";
-                    foreach (var script in feature.FuncsSPsViewsTriggers)
+                    foreach (var script in feature.FuncsSPsViewsTriggersScripts)
                     {
                         str += $"----script: {script.FileName} \n";
                     }
@@ -90,9 +90,9 @@ namespace DBMigrator
                         }
                     }
 
-                    foreach (var sourceFuncsSPsViewsTriggersScript in sourceFeature.FuncsSPsViewsTriggers)
+                    foreach (var sourceFuncsSPsViewsTriggersScript in sourceFeature.FuncsSPsViewsTriggersScripts)
                     {
-                        var targetScript = targetFeature.FuncsSPsViewsTriggers.SingleOrDefault(s => s.FileName == sourceFuncsSPsViewsTriggersScript.FileName);
+                        var targetScript = targetFeature.FuncsSPsViewsTriggersScripts.SingleOrDefault(s => s.FileName == sourceFuncsSPsViewsTriggersScript.FileName);
                         if (targetScript == null)
                         {
                             var diffVersion = diff.SingleOrDefault(t => t.Name == targetVersion.Name);
@@ -123,7 +123,7 @@ namespace DBMigrator
                 CopyUpgradeScriptToFeature(script, feature);
             }
 
-            foreach (var script in sourceFeature.FuncsSPsViewsTriggers)
+            foreach (var script in sourceFeature.FuncsSPsViewsTriggersScripts)
             {
                 CopyFuncsSPsViewsTriggersScriptToFeature(script, feature);
             }

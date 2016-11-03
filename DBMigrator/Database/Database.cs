@@ -13,16 +13,18 @@ namespace DBMigrator
         public SqlConnection Sqlconn;
         private SqlTransaction trans;
         private Logger _logger;
-        public DatabaseSchema DatabaseSchema;
-        public DatabaseFuncViewStoredProcedureTrigger DatabaseFuncViewStoredProcedureTrigger;
+        private DatabaseSchema _databaseSchema;
+        private DatabaseFuncViewStoredProcedureTrigger _databaseFuncViewStoredProcedureTrigger;
+        private DatabaseData _databaseData;
 
 
         public Database(string servername, string database, string username, string password)
         {
             var connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
             SetupConnAndLogger(connectionString);
-            DatabaseSchema = new DatabaseSchema(this);
-            DatabaseFuncViewStoredProcedureTrigger = new DatabaseFuncViewStoredProcedureTrigger(this);
+            _databaseSchema = new DatabaseSchema(this);
+            _databaseFuncViewStoredProcedureTrigger = new DatabaseFuncViewStoredProcedureTrigger(this);
+            _databaseData = new DatabaseData(this);
         }
 
         public Database(string initialCatalog) // string mdfFilePath, 
@@ -38,9 +40,24 @@ namespace DBMigrator
 
         public List<DBVersion> GetDBState()
         {
-            var versions = DatabaseSchema.GetDBState();
-            DatabaseFuncViewStoredProcedureTrigger.AppendDatabaseFuncViewStoredProcedureTriggerState(versions);
+            var versions = _databaseSchema.GetDBState();
+            _databaseFuncViewStoredProcedureTrigger.AppendDatabaseFuncViewStoredProcedureTriggerState(versions);
             return versions;
+        }
+
+        public void UpgradeSchema(UpgradeScript script)
+        {
+            _databaseSchema.UpdateDataWithFile(script);
+        }
+
+        public void DowngradeShema(DowngradeScript script)
+        {
+            _databaseSchema.DowngradeDataWithFile(script);
+        }
+
+        public void UpgradeFuncViewStoredProcedureTrigger(FuncViewStoredProcedureTriggerScript script)
+        {
+            _databaseFuncViewStoredProcedureTrigger.UpdateDataWithFile(script);
         }
 
         public void UpdateDatabaseVersion(DBVersion version)

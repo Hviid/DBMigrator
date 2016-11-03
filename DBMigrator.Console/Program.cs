@@ -22,7 +22,7 @@ namespace DBMigrator.Console
             //        "Enter the full name of the person to be greeted.",
             //        multipleValues: true));
             //test2.HelpOption("-? | -h | --help");
-            var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validate>", "Command to execute");
+            var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validatedatabase|validateupgrade>", "Command to execute");
 
             CommandOption versionArg = commandLineApplication.Option(
                 "-v |--version <version>",
@@ -71,8 +71,11 @@ namespace DBMigrator.Console
                     case "downgrade":
                         Rollback(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value());
                         break;
-                    case "validate":
-                        Validate(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value());
+                    case "validatedatabase":
+                        ValidateDatabase(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value());
+                        break;
+                    case "validateupgrade":
+                        ValidateUpgrade(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value());
                         break;
                     default:
                         break;
@@ -122,7 +125,17 @@ namespace DBMigrator.Console
             System.Console.ReadKey();
         }
 
-        private static void Validate(string servername, string databasename, string username, string password)
+        private static void ValidateDatabase(string servername, string databasename, string username, string password)
+        {
+            var database2 = new Database(servername, databasename, username, password);
+            var dbVersions2 = database2.GetDBState();
+            var dbfolder2 = new DBFolder();
+            var validator2 = new VersionValidator();
+            validator2.ValidateVersions(dbfolder2.allVersions, dbVersions2);
+            System.Console.ReadKey();
+        }
+
+        private static void ValidateUpgrade(string toVersion, string servername, string databasename, string username, string password)
         {
             var database2 = new Database(servername, databasename, username, password);
             var dbVersions2 = database2.GetDBState();

@@ -80,6 +80,32 @@ namespace DBMigrator
             }
         }
 
+        private void FindDataForFeature(Feature feature)
+        {
+            var migrationsPath = Path.Combine(GetFeaturePath(feature), "Data");
+
+            var sqlScriptsNames = Directory.GetFiles(migrationsPath, "*.sql");
+
+            foreach (var scriptName in sqlScriptsNames.Select(s => Path.GetFileName(s)))
+            {
+                var match = Regex.Match(scriptName, Script.ORDERED_FILENAME_REGEX);
+
+                if (match.Success)
+                {
+                    var order = int.Parse(match.Groups[1].Value);
+
+                    var script = feature.AddDataScript(scriptName, order);
+                    var filePath = Path.Combine(migrationsPath, scriptName);
+                    script.SQL = GetFileContent(filePath);
+                    script.Checksum = GetFileChecksum(filePath);
+                }
+                else if (!Regex.IsMatch(scriptName, Script.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
+                {
+                    throw new Exception($"file {scriptName} aren't a rollback script, and doesn't match the expected regex format: {Script.MIGRATIONS_UPGRADE_FILENAME_REGEX}");
+                }
+            }
+        }
+
         private void FindMigrationsForFeature(Feature feature)
         {
             var migrationsPath = Path.Combine(GetFeaturePath(feature), "Migrations");
@@ -117,7 +143,7 @@ namespace DBMigrator
 
                 foreach (var scriptName in sqlScriptsNames.Select(s => Path.GetFileName(s)))
                 {
-                    var scriptNameMatch = Regex.Match(scriptName, Script.FuncViewStoredProcedureTrigger_FILENAME_REGEX);
+                    var scriptNameMatch = Regex.Match(scriptName, Script.ORDERED_FILENAME_REGEX);
 
                     if (scriptNameMatch.Success)
                     {
@@ -126,10 +152,10 @@ namespace DBMigrator
                         var filePath = Path.Combine(funcViewStoredProcedureTriggerPath, scriptName);
                         var content = GetFileContent(filePath);
 
-                        var contentMatch = Regex.Match(content, Script.bla, RegexOptions.IgnoreCase);
+                        var contentMatch = Regex.Match(content, Script.FUNC_PROCEDURE_VIEW_TRIGGER_REGEX, RegexOptions.IgnoreCase);
 
                         if (!contentMatch.Success)
-                            throw new Exception($"Could not match content with {Script.bla}");
+                            throw new Exception($"Could not match content with {Script.FUNC_PROCEDURE_VIEW_TRIGGER_REGEX}");
 
                         var type = scriptNameMatch.Groups[1].Value;
                         var name = scriptNameMatch.Groups[2].Value;
@@ -141,7 +167,7 @@ namespace DBMigrator
                     }
                     else
                     {
-                        throw new Exception($"file {scriptName} doesn't match the expected regex format: {Script.FuncViewStoredProcedureTrigger_FILENAME_REGEX}");
+                        throw new Exception($"file {scriptName} doesn't match the expected regex format: {Script.ORDERED_FILENAME_REGEX}");
                     }
                 }
             }
@@ -172,7 +198,7 @@ namespace DBMigrator
             }
         }
 
-        private Script FindRollback(UpgradeScript upgradeScript)
+        private DowngradeScript FindRollback(UpgradeScript upgradeScript)
         {
             var match = Regex.Match(upgradeScript.FileName, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
 
@@ -182,7 +208,7 @@ namespace DBMigrator
             if (System.IO.File.Exists(filePath))
             {
                 var rollbackScript =  new DowngradeScript(rollbackFileName, upgradeScript.Order, upgradeScript.Feature);
-                rollbackScript.RollbackScript = upgradeScript;
+                rollbackScript.UpgradeScript = upgradeScript;
                 rollbackScript.SQL = GetFileContent(filePath);
                 rollbackScript.Checksum = GetFileChecksum(filePath);
                 return rollbackScript;

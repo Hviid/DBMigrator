@@ -41,6 +41,33 @@ DBMigrator works
 
 ## DBMigrator
 
+### Folder structure and scripts
+Folder structure is as follows: 
+
+    <ReleaseVersion>/<Feature>/Migrations/
+
+Example:
+
+    1.00/US_12345/Migrations/
+
+Note that DBMigrator should be at the same place as \<ReleaseVersion\> folder.
+
+Script files should be named as follows:
+
+	<order>_<name>.sql
+
+Example:
+
+	1_Test.sql
+
+Rollback script files should be named as follows:
+
+	<order>_rollback_<name>.sql
+
+Example:
+
+	1_rollback_Test.sql
+
 ### Create new version
 Run DBMigrator with parameters like follows:
 
@@ -67,11 +94,11 @@ Inside this folder are the following folder structure:
 ### Upgrade database
 Run DBMigrator with parameters like follows:
 
-    upgrade "$servername" "$database" "$username" "$password" "$toVersionString"
+    upgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password"
 
-Where $toVersionString is optional and will default be the latest version.
+Where "-v" is optional and will default be the latest version.
 
-### Rollback database
+### Downgrade database
 Run DBMigrator with parameters like follows:
 
-    rollback "$servername" "$database" "$username" "$password" "$toVersionString"
+    downgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password" 

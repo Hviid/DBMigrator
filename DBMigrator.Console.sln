@@ -1,18 +1,18 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DBMigrator.Console", "DBMigrator.Console\DBMigrator.Console.xproj", "{A88570C3-DDEE-4FCD-A2F9-6991BFA0E42E}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DBMigrator", "DBMigrator\DBMigrator.xproj", "{B89EB784-C1AD-457F-A556-29849101BA30}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D870B7A6-4C06-45DD-982E-6D8362A82D3D}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DBMigrator.Test", "DBMigrator.Test\DBMigrator.Test.xproj", "{6894DF2B-A153-4ED0-9198-B085A801E118}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigrator.Console", "DBMigrator.Console\DBMigrator.Console.csproj", "{A88570C3-DDEE-4FCD-A2F9-6991BFA0E42E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigrator", "DBMigrator\DBMigrator.csproj", "{B89EB784-C1AD-457F-A556-29849101BA30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigrator.Test", "DBMigrator.Test\DBMigrator.Test.csproj", "{6894DF2B-A153-4ED0-9198-B085A801E118}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

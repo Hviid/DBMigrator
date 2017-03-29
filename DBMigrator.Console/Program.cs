@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.CommandLineUtils;
 using DBMigrator.Model;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 
 namespace DBMigrator.Console
 {
@@ -49,6 +51,11 @@ namespace DBMigrator.Console
                 "The password for the to auth against the database",
                 CommandOptionType.SingleValue);
 
+            CommandOption migrationsPathArg = commandLineApplication.Option(
+                "-f |--folderPath <path>",
+                "The path for the folder where migrations are located",
+                CommandOptionType.SingleValue);
+
             CommandOption noPromptArg = commandLineApplication.Option(
                 "--noprompt",
                 "Runs command without required user interaction",
@@ -61,12 +68,22 @@ namespace DBMigrator.Console
             var loggerFactory = test.GetRequiredService<ILoggerFactory>();
             _logger = loggerFactory.CreateLogger<Program>();
 
+            DirectoryInfo migrationDirectory;
+
+            if(migrationsPathArg.HasValue())
+            {
+                migrationDirectory = new DirectoryInfo(migrationsPathArg.Value());
+            } else
+            {
+                migrationDirectory = GetExecutingDir();
+            }
+
             commandLineApplication.OnExecute(() =>
             {
                 switch (commandArg.Value)
                 {
                     case "upgrade":
-                        Upgrade(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), noPromptArg.HasValue());
+                        Upgrade(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationsPathArg.Value(), noPromptArg.HasValue());
                         break;
                     case "downgrade":
                         Rollback(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value());
@@ -85,7 +102,14 @@ namespace DBMigrator.Console
             commandLineApplication.Execute(args);
         }
 
-        private static void Upgrade(string toVersion, string servername, string databasename, string username, string password, bool noPrompt = false)
+        public static DirectoryInfo GetExecutingDir()
+        {
+            return new DirectoryInfo(Path.GetDirectoryName(typeof(VersionValidator).GetTypeInfo().Assembly.Location));
+            //new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
+            //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+        }
+
+        private static void Upgrade(string toVersion, string servername, string databasename, string username, string password, string migrationsPath, bool noPrompt = false)
         {
             var database = new Database(servername, databasename, username, password);
             var dbfolder = new DBFolder();

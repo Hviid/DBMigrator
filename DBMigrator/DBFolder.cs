@@ -4,36 +4,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Security.Cryptography;
 
 namespace DBMigrator
 {
     public class DBFolder
     {
-        private DirectoryInfo _executingDirectory;
+        private DirectoryInfo _migrationsDirectory;
         public List<DBVersion> allVersions;
 
 
-        public DBFolder(string executingDirectoryPath = null)
+        public DBFolder(DirectoryInfo migrationsDirectory)
         {
-            if (String.IsNullOrEmpty(executingDirectoryPath))
-            {
-                _executingDirectory = GetExecutingDir();
-            }
-            else
-            {
-                _executingDirectory = new DirectoryInfo(executingDirectoryPath);
-            }
+            _migrationsDirectory = migrationsDirectory;
             allVersions = GetFolderState();
-        }
-
-        public static DirectoryInfo GetExecutingDir()
-        {
-            return new DirectoryInfo(Path.GetDirectoryName(typeof(VersionValidator).GetTypeInfo().Assembly.Location));
-            //new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
-            //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
         public List<DBVersion> GetVersions(string upToVersionStr)
@@ -56,7 +40,7 @@ namespace DBMigrator
 
         private List<DBVersion> GetFolderState()
         {
-            var allVersions = _executingDirectory.GetDirectories().Select(d => new DBVersion(d.Name)).ToList();
+            var allVersions = _migrationsDirectory.GetDirectories().Select(d => new DBVersion(d.Name)).ToList();
 
             foreach (var version in allVersions)
             {
@@ -175,12 +159,12 @@ namespace DBMigrator
 
         private DirectoryInfo GetVersionDirectory(DBVersion version)
         {
-            return new DirectoryInfo(Path.Combine(_executingDirectory.FullName, version.Name));
+            return new DirectoryInfo(Path.Combine(_migrationsDirectory.FullName, version.Name));
         }
 
         private string GetFeaturePath(Feature feature)
         {
-            var versionFolderPath = Path.Combine(_executingDirectory.FullName, feature.Version.Name);
+            var versionFolderPath = Path.Combine(_migrationsDirectory.FullName, feature.Version.Name);
             return Path.Combine(versionFolderPath, feature.Name);
         }
 

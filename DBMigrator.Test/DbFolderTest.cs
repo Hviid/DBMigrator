@@ -25,7 +25,8 @@ namespace DBMigrator.Test
         public void Load_Folder_Test()
         {
             var path = Path.Combine(Path.GetDirectoryName(typeof(VersionValidator).GetTypeInfo().Assembly.Location), "TestDBFolderStructure");
-            var dbFolder = new DBFolder(path);
+            var dirInfo = new DirectoryInfo(path);
+            var dbFolder = new DBFolder(dirInfo);
 
             var differ = new VersionDiff();
 

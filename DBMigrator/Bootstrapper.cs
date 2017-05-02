@@ -20,7 +20,7 @@ namespace DBMigrator
         static public void ConfigureServices(IServiceCollection serviceCollection)
         {
             ILoggerFactory loggerFactory = new LoggerFactory()
-                .AddConsole()
+                .AddConsole(LogLevel.Debug)
                 .AddDebug();
 
             serviceCollection.AddSingleton<ILoggerFactory>(loggerFactory);

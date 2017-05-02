@@ -4,47 +4,43 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Security.Cryptography;
 
 namespace DBMigrator
 {
     public class DBFolder
     {
-        private DirectoryInfo _executingDirectory;
+        private DirectoryInfo _migrationsDirectory;
         public List<DBVersion> allVersions;
 
 
-        public DBFolder(string executingDirectoryPath = null)
+        public DBFolder(DirectoryInfo migrationsDirectory)
         {
-            if (String.IsNullOrEmpty(executingDirectoryPath))
-            {
-                _executingDirectory = GetExecutingDir();
-            }
-            else
-            {
-                _executingDirectory = new DirectoryInfo(executingDirectoryPath);
-            }
+            _migrationsDirectory = migrationsDirectory;
             allVersions = GetFolderState();
         }
 
-        public static DirectoryInfo GetExecutingDir()
+        public List<DBVersion> GetVersions(string upToVersionStr)
         {
-            return new DirectoryInfo(Path.GetDirectoryName(typeof(Validator).GetTypeInfo().Assembly.Location));
-            //new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
-            //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
-        }
+            if(string.IsNullOrEmpty(upToVersionStr))
+                return allVersions.ToList();
 
-        public List<DBVersion> GetVersionsUpTo(string version)
-        {
-            var upToVersion = new Version(version);
+            Version upToVersion;
+            try
+            {
+                upToVersion = new Version(upToVersionStr);
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException($"Could not parse {upToVersionStr} into Version object", nameof(upToVersionStr));
+            }
+            
             return allVersions.Where(v => v.Version <= upToVersion).ToList();
         }
 
         private List<DBVersion> GetFolderState()
         {
-            var allVersions = _executingDirectory.GetDirectories().Select(d => new DBVersion(d.Name)).ToList();
+            var allVersions = _migrationsDirectory.GetDirectories().Select(d => new DBVersion(d.Name)).ToList();
 
             foreach (var version in allVersions)
             {
@@ -64,6 +60,33 @@ namespace DBMigrator
             foreach (var feature in version.Features)
             {
                 FindMigrationsForFeature(feature);
+                FindFuncViewStoredProcedureTriggerForFeature(feature);
+            }
+        }
+
+        private void FindDataForFeature(Feature feature)
+        {
+            var migrationsPath = Path.Combine(GetFeaturePath(feature), "Data");
+
+            var sqlScriptsNames = Directory.GetFiles(migrationsPath, "*.sql");
+
+            foreach (var scriptName in sqlScriptsNames.Select(s => Path.GetFileName(s)))
+            {
+                var match = Regex.Match(scriptName, Script.ORDERED_FILENAME_REGEX);
+
+                if (match.Success)
+                {
+                    var order = int.Parse(match.Groups[1].Value);
+
+                    var script = feature.AddDataScript(scriptName, order);
+                    var filePath = Path.Combine(migrationsPath, scriptName);
+                    script.SQL = GetFileContent(filePath);
+                    script.Checksum = GetFileChecksum(filePath);
+                }
+                else if (!Regex.IsMatch(scriptName, Script.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
+                {
+                    throw new Exception($"file {scriptName} aren't a rollback script, and doesn't match the expected regex format: {Script.MIGRATIONS_UPGRADE_FILENAME_REGEX}");
+                }
             }
         }
 
@@ -81,7 +104,7 @@ namespace DBMigrator
                 {
                     var order = int.Parse(match.Groups[1].Value);
                     
-                    var script = feature.AddScript(scriptName, order, Script.SQLTYPE.Upgrade);
+                    var script = feature.AddUpgradeScript(scriptName, order);
                     var filePath = Path.Combine(migrationsPath, scriptName);
                     script.SQL = GetFileContent(filePath);
                     script.Checksum = GetFileChecksum(filePath);
@@ -94,14 +117,54 @@ namespace DBMigrator
             }
         }
 
+        private void FindFuncViewStoredProcedureTriggerForFeature(Feature feature)
+        {
+            var funcViewStoredProcedureTriggerPath = Path.Combine(GetFeaturePath(feature), "FuncViewStoredProcedureTrigger");
+
+            if (Directory.Exists(funcViewStoredProcedureTriggerPath))
+            {
+                var sqlScriptsNames = Directory.GetFiles(funcViewStoredProcedureTriggerPath, "*.sql");
+
+                foreach (var scriptName in sqlScriptsNames.Select(s => Path.GetFileName(s)))
+                {
+                    var scriptNameMatch = Regex.Match(scriptName, Script.ORDERED_FILENAME_REGEX);
+
+                    if (scriptNameMatch.Success)
+                    {
+                        var order = int.Parse(scriptNameMatch.Groups[1].Value);
+
+                        var filePath = Path.Combine(funcViewStoredProcedureTriggerPath, scriptName);
+                        var content = GetFileContent(filePath);
+
+                        var contentMatch = Regex.Match(content, Script.FUNC_PROCEDURE_VIEW_TRIGGER_REGEX, RegexOptions.IgnoreCase);
+
+                        if (!contentMatch.Success)
+                            throw new Exception($"Could not match content with {Script.FUNC_PROCEDURE_VIEW_TRIGGER_REGEX}");
+
+                        var type = scriptNameMatch.Groups[1].Value;
+                        var name = scriptNameMatch.Groups[2].Value;
+
+                        var script = feature.AddFuncViewStoredProcedureTriggerScript(scriptName, type, name, order);
+                        
+                        script.SQL = content;
+                        script.Checksum = GetFileChecksum(filePath);
+                    }
+                    else
+                    {
+                        throw new Exception($"file {scriptName} doesn't match the expected regex format: {Script.ORDERED_FILENAME_REGEX}");
+                    }
+                }
+            }
+        }
+
         private DirectoryInfo GetVersionDirectory(DBVersion version)
         {
-            return new DirectoryInfo(Path.Combine(_executingDirectory.FullName, version.Name));
+            return new DirectoryInfo(Path.Combine(_migrationsDirectory.FullName, version.Name));
         }
 
         private string GetFeaturePath(Feature feature)
         {
-            var versionFolderPath = Path.Combine(_executingDirectory.FullName, feature.Version.Name);
+            var versionFolderPath = Path.Combine(_migrationsDirectory.FullName, feature.Version.Name);
             return Path.Combine(versionFolderPath, feature.Name);
         }
 
@@ -119,7 +182,7 @@ namespace DBMigrator
             }
         }
 
-        private Script FindRollback(Script upgradeScript)
+        private DowngradeScript FindRollback(UpgradeScript upgradeScript)
         {
             var match = Regex.Match(upgradeScript.FileName, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
 
@@ -128,8 +191,8 @@ namespace DBMigrator
             var filePath = Path.Combine(GetFeaturePath(upgradeScript.Feature), "Migrations", rollbackFileName);
             if (System.IO.File.Exists(filePath))
             {
-                var rollbackScript =  new Script(rollbackFileName, upgradeScript.Order, Script.SQLTYPE.Rollback, upgradeScript.Feature);
-                rollbackScript.RollbackScript = upgradeScript;
+                var rollbackScript =  new DowngradeScript(rollbackFileName, upgradeScript.Order, upgradeScript.Feature);
+                rollbackScript.UpgradeScript = upgradeScript;
                 rollbackScript.SQL = GetFileContent(filePath);
                 rollbackScript.Checksum = GetFileChecksum(filePath);
                 return rollbackScript;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DBMigrator
 {
-    public class Validator
+    public class VersionValidator
     {
         /// <summary>
         /// Validates that everything in target, are correct against source

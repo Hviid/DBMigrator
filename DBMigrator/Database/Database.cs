@@ -1,25 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Data.SqlClient;
 using DBMigrator.Model;
 using System.IO;
-using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography;
+using System.Collections.Generic;
 
 namespace DBMigrator
 {
     public class Database : IDisposable
     {
-        private SqlConnection sqlconn;
+        public SqlConnection Sqlconn;
         private SqlTransaction trans;
         private Logger _logger;
-        
+        private DatabaseSchema _databaseSchema;
+        private DatabaseFuncViewStoredProcedureTrigger _databaseFuncViewStoredProcedureTrigger;
+        private DatabaseData _databaseData;
+
+
         public Database(string servername, string database, string username, string password)
         {
             var connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
             SetupConnAndLogger(connectionString);
+            _databaseSchema = new DatabaseSchema(this);
+            _databaseFuncViewStoredProcedureTrigger = new DatabaseFuncViewStoredProcedureTrigger(this);
+            _databaseData = new DatabaseData(this);
         }
 
         public Database(string initialCatalog) // string mdfFilePath, 
@@ -30,59 +35,29 @@ namespace DBMigrator
         private void SetupConnAndLogger(string connectionString)
         {
             _logger = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<Logger>();
-            sqlconn = new SqlConnection(connectionString);
+            Sqlconn = new SqlConnection(connectionString);
         }
 
-        public string CheckDatabaseVersion()
+        public List<DBVersion> GetDBState()
         {
-            var version = "0.0.0.0";
-            try
-            {
-                sqlconn.Open();
-                //var data = ExecuteCommand("SELECT TOP 1 Version FROM DBVersion order by Date desc");
-                var data = ExecuteCommand("SELECT TOP 1 Version FROM DBVersionScripts order by Date desc");
-                if (data.HasRows)
-                {
-                    data.Read();
-                    version = data.GetString(0);
-                    _logger.Log($"Found existing database version {version}");
-                }
-                sqlconn.Close();
-            }
-            catch (Exception ex)
-            {
-                sqlconn.Close();
-                CreateDBVersionTable();
-            }
-            return version;
+            var versions = _databaseSchema.GetDBState();
+            _databaseFuncViewStoredProcedureTrigger.AppendDatabaseFuncViewStoredProcedureTriggerState(versions);
+            return versions;
         }
 
-        private void CreateDBVersionTable2()
+        public void UpgradeSchema(UpgradeScript script)
         {
-            _logger.Log("Creating DBVersion table");
-            ExecuteSingleCommand("CREATE TABLE DBVersion ([ID] [int] IDENTITY(1,1) NOT NULL, Version varchar(max) NOT NULL, Date datetime2 NOT NULL, Log xml NOT NULL, CONSTRAINT [PK_dbo.DBVersion] PRIMARY KEY CLUSTERED ([ID] ASC))");
-            ExecuteSingleCommand("CREATE TABLE DBVersionScripts (DBVersionID int NOT NULL, Feature varchar(max) NOT NULL, [Order] int NOT NULL, Script varchar(max) NOT NULL, Type varchar(max) NOT NULL, [Checksum] varchar(max) NOT NULL, ExecutionTime int NOT NULL)");
-            ExecuteSingleCommand("ALTER TABLE [DBVersionScripts] WITH CHECK ADD CONSTRAINT [FK.DBVersion.DBVersionScripts_DBVersionID] FOREIGN KEY([DBVersionID]) REFERENCES [DBVersion]([ID])");
+            _databaseSchema.UpdateDataWithFile(script);
         }
 
-        private void CreateDBVersionTable()
+        public void DowngradeShema(DowngradeScript script)
         {
-            _logger.Log("Creating DBVersion table");
-            ExecuteSingleCommand(@"CREATE TABLE DBVersionScripts (
-                            [ID] [int] IDENTITY(1,1) NOT NULL, 
-                            Date datetime2 NOT NULL, 
-                            Version varchar(max) NOT NULL, 
-                            Feature varchar(max) NOT NULL, 
-                            [Order] int NOT NULL, 
-                            Script varchar(max) NOT NULL, 
-                            Type varchar(max) NOT NULL, 
-                            [ScriptFileChecksum] varchar(max) NOT NULL, 
-                            [DatabaseTriggersChecksum] varchar(max) NOT NULL, 
-                            [DatabaseTablesAndViewsChecksum] varchar(max) NOT NULL, 
-                            [DatabaseFunctionsChecksum] varchar(max) NOT NULL, 
-                            [DatabaseStoredProceduresChecksum] varchar(max) NOT NULL, 
-                            [DatabaseIndexesChecksum] varchar(max) NOT NULL, 
-                            ExecutionTime int NOT NULL)");
+            _databaseSchema.DowngradeDataWithFile(script);
+        }
+
+        public void UpgradeFuncViewStoredProcedureTrigger(FuncViewStoredProcedureTriggerScript script)
+        {
+            _databaseFuncViewStoredProcedureTrigger.UpdateDataWithFile(script);
         }
 
         public void UpdateDatabaseVersion(DBVersion version)
@@ -103,71 +78,24 @@ namespace DBMigrator
             //ExecuteCommand($"UPDATE DBVersion SET Log = '<xml>' + CHAR(13) + '{_logger.log.ToString()}</xml>' WHERE ID = {version.ID}");
         }
 
-        public void UpdateDataWithFile(Script script)
-        {
-            var sw = new Stopwatch();
-            sw.Start();
-            ExecuteCommand(script.SQL);
-            sw.Stop();
-            script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
-            var databaseTriggersChecksum = GetTriggersChecksum();
-            var databaseTablesAndViewsChecksum = GetTablesViewsAndColumnsChecksum();
-            var databaseFunctionsChecksum = GetFunctionsChecksum();
-            var databaseStoredProceduresChecksum = GetStoredProceduresChecksum();
-            var databaseIndexesChecksum = GetIndexesChecksum();
-            //ExecuteCommand($"INSERT INTO DBVersionScripts (DBVersionID, [Order], Feature, Script, Type, Checksum, ExecutionTime) VALUES ('{script.Feature.Version.ID}', {script.Order}, '{script.Feature.Name}', '{script.FileName}', '{script.Type.ToString()}', '{script.Checksum}', {script.ExecutionTime})");
-            ExecuteCommand($@"INSERT INTO DBVersionScripts (
-                                                [Version], 
-                                                [Date], 
-                                                [Order], 
-                                                Feature, 
-                                                Script, 
-                                                Type, 
-                                                ScriptFileChecksum, 
-                                                DatabaseTriggersChecksum, 
-                                                DatabaseTablesAndViewsChecksum, 
-                                                DatabaseFunctionsChecksum, 
-                                                DatabaseStoredProceduresChecksum, 
-                                                DatabaseIndexesChecksum, 
-                                                ExecutionTime) VALUES (
-                                                '{script.Feature.Version.Name}',
-                                                GETUTCDATE(), 
-                                                {script.Order}, 
-                                                '{script.Feature.Name}', 
-                                                '{script.FileName}', 
-                                                '{script.Type.ToString()}', 
-                                                '{script.Checksum}', 
-                                                '{databaseTriggersChecksum}', 
-                                                '{databaseTablesAndViewsChecksum}', 
-                                                '{databaseFunctionsChecksum}', 
-                                                '{databaseStoredProceduresChecksum}', 
-                                                '{databaseIndexesChecksum}', 
-                                                {script.ExecutionTime})");
-        }
-
-        public void DowngradeDataWithFile(Script script)
-        {
-            ExecuteCommand(script.SQL);
-            ExecuteCommand($"DELETE FROM DBVersionScripts WHERE Script = '{script.RollbackScript.FileName}'");
-        }
-
         public void ExecuteSingleCommand(string cmd)
         {
-            sqlconn.Open();
+            Sqlconn.Open();
             try
             {
                 ExecuteCommand(cmd);
             }
             finally
             {
-                sqlconn.Close();
+                Sqlconn.Close();
             }
         }
 
-        private SqlDataReader ExecuteCommand(string cmd)
+        public SqlDataReader ExecuteCommand(string cmd)
         {
-            using (SqlCommand command = new SqlCommand(cmd, sqlconn, trans))
+            using (SqlCommand command = new SqlCommand(cmd, Sqlconn, trans))
             {
+                command.CommandTimeout = 0;
                 var result = command.ExecuteReader();
                 return result;
             }
@@ -175,62 +103,28 @@ namespace DBMigrator
 
         public void BeginTransaction()
         {
-            sqlconn.Open();
-            trans = sqlconn.BeginTransaction();
+            Sqlconn.Open();
+            trans = Sqlconn.BeginTransaction();
         }
 
         public void CommitTransaction()
         {
             trans.Commit();
-            sqlconn.Close();
+            Sqlconn.Close();
         }
 
         public void RollbackTransaction()
         {
             trans.Rollback();
-            sqlconn.Close();
+            Sqlconn.Close();
         }
 
         public void Close()
         {
-            sqlconn.Close();
+            Sqlconn.Close();
         }
 
-        public List<DBVersion> GetDBState() {
-            CheckDatabaseVersion();
-            sqlconn.Open();
-            var result = new List<DBVersion>();
-            //var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [Checksum], [ExecutionTime] FROM [DBVersion] LEFT JOIN [DbversionScripts] ON [DBVersion].ID = [DbversionScripts].DBVersionID");
-            var data = ExecuteCommand("SELECT [Version], [Feature], [Order], [Script], [Type], [ScriptFileChecksum], [ExecutionTime] FROM [DBVersionScripts]");
-            while (data.Read())
-            {
-                var version = data.GetString(0);
-
-                var dbversion = result.FirstOrDefault(v => v.Name == version);
-                if (dbversion == null)
-                {
-                    dbversion = new DBVersion(version);
-                    result.Add(dbversion);
-                }
-
-                string feature = null;
-                if(!data.IsDBNull(1))
-                {
-                    feature = data.GetString(1);
-                    var order = data.GetInt32(2);
-                    var scriptFileName = data.GetString(3);
-                    var type = data.GetString(4);
-                    var checksum = data.GetString(5);
-                    var executiontime = data.GetInt32(6);
-
-                    var script = dbversion.AddAndOrGetFeature(feature).AddScript(scriptFileName, order, (Script.SQLTYPE)Enum.Parse(typeof(Script.SQLTYPE), type));
-                    script.Checksum = checksum;
-                    script.ExecutionTime = executiontime;
-                }
-            }
-            sqlconn.Close();
-            return result;
-        }
+        
         //http://www.bidn.com/blogs/TomLannen/bidn-blog/2265/using-hashbytes-to-compare-columns
         public string GetTablesViewsAndColumnsChecksum()
         {
@@ -380,15 +274,15 @@ namespace DBMigrator
             var hash = sha.ComputeHash(memStream.ToArray());
 
             //sqlconn.Close();
-            return System.Text.Encoding.UTF8.GetString(hash);
+            return System.Text.Encoding.UTF8.GetString(hash).Replace("'", "");
         }
 
 
 
         public void Dispose()
         {
-            if(sqlconn.State != System.Data.ConnectionState.Closed)
-                sqlconn.Close();
+            if(Sqlconn.State != System.Data.ConnectionState.Closed)
+                Sqlconn.Close();
         }
     }
 }

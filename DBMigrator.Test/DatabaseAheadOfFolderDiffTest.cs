@@ -15,12 +15,12 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            feature.AddUpgradeScript("TestScript.sql", 1);
 
             var version2 = new DBVersion("2.0.0");
             var feature2 = version2.AddAndOrGetFeature("TestFeature2");
             
-            feature2.AddScript("TestScript2.sql", 1, Script.SQLTYPE.Upgrade);
+            feature2.AddUpgradeScript("TestScript2.sql", 1);
 
             return new List<DBVersion> { version, version2 };
         }
@@ -30,7 +30,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            feature.AddUpgradeScript("TestScript.sql", 1);
 
             return new List<DBVersion> { version };
         }

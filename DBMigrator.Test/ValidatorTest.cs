@@ -15,7 +15,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -26,7 +26,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -37,7 +37,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "B";
 
             return new List<DBVersion> { version };
@@ -48,7 +48,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.1");
             var feature = version.AddAndOrGetFeature("TestFeature");
             
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -59,7 +59,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature2");
 
-            var script = feature.AddScript("TestScript.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -70,7 +70,7 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var feature = version.AddAndOrGetFeature("TestFeature");
 
-            var script = feature.AddScript("TestScript2.sql", 1, Script.SQLTYPE.Upgrade);
+            var script = feature.AddUpgradeScript("TestScript2.sql", 1);
             script.Checksum = "A";
 
             return new List<DBVersion> { version };
@@ -79,7 +79,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_nodiff()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             validator.ValidateVersions(Baseline(), Same());
         }
@@ -87,7 +87,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_checksum()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffChecksum()));
         }
@@ -95,7 +95,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_version()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffVersion()));
         }
@@ -103,7 +103,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_feature()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffFeature()));
         }
@@ -111,7 +111,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Test_Diff_script()
         {
-            var validator = new Validator();
+            var validator = new VersionValidator();
 
             Assert.ThrowsException<Exception>(() => validator.ValidateVersions(Baseline(), DiffScript()));
         }

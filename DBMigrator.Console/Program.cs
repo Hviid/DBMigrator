@@ -70,16 +70,17 @@ namespace DBMigrator.Console
 
             DirectoryInfo migrationDirectory;
 
-            if(migrationsPathArg.HasValue())
-            {
-                migrationDirectory = new DirectoryInfo(migrationsPathArg.Value());
-            } else
-            {
-                migrationDirectory = GetExecutingDir();
-            }
-
             commandLineApplication.OnExecute(() =>
             {
+                if (migrationsPathArg.HasValue())
+                {
+                    migrationDirectory = new DirectoryInfo(migrationsPathArg.Value());
+                }
+                else
+                {
+                    migrationDirectory = GetExecutingDir();
+                }
+
                 switch (commandArg.Value)
                 {
                     case "upgrade":

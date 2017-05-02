@@ -95,6 +95,7 @@ namespace DBMigrator
         {
             using (SqlCommand command = new SqlCommand(cmd, Sqlconn, trans))
             {
+                command.CommandTimeout = 0;
                 var result = command.ExecuteReader();
                 return result;
             }

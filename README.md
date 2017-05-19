@@ -50,7 +50,8 @@ Example:
 
     1.0/US_12345/Migrations/
 
-Note that DBMigrator should be at the same place as \<ReleaseVersion\> folder.
+Note that DBMigrator should be at the same place as \<ReleaseVersion\> folder or folder should be referenced by the -f paramether.
+Note that versions should not contain leading zeroes (1.0, 1.10 is ok while 1.00 and 1.01 is not)
 
 Script files should be named as follows:
 
@@ -68,37 +69,15 @@ Example:
 
 	1_rollback_Test.sql
 
-### Create new version
-Run DBMigrator with parameters like follows:
-
-    -newversion "$version"
-
-
-This creates a new folder with "$version" as name in the folder where the executable 
-are located.
-
-### Create new feature
-Run DBMigrator with parameters like follows:
-
-    NewFeature.ps1 "$newfeaturename"
-
-This creates a new folder with "$newfeaturename" as name in the folder 
-where "NewFeature.ps1" are located.
-
-Inside this folder are the following folder structure:
-*  Migrations
-*  Migrate
-
-
 
 ### Upgrade database
 Run DBMigrator with parameters like follows:
 
-    upgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password"
+    upgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password" -f "$folderPath"
 
 Where "-v" is optional and will default be the latest version.
 
 ### Downgrade database
 Run DBMigrator with parameters like follows:
 
-    downgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password" 
+    downgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password" -f "$folderPath"

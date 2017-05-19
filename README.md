@@ -77,8 +77,10 @@ Run DBMigrator with parameters like follows:
     upgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password" -f "$folderPath"
 
 Where "-v" is optional and will default be the latest version.
+If -u and -p is omitted "Integrated Security" will be used
 
 ### Downgrade database
 Run DBMigrator with parameters like follows:
 
     downgrade -v "$toVersionString" -s "$servername" -d "$database" -u "$username" -p "$password" -f "$folderPath"
+If -u and -p is omitted "Integrated Security" will be used

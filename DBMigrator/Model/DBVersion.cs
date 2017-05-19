@@ -29,6 +29,10 @@ namespace DBMigrator.Model
             {
                 throw new ArgumentException($"Could not convert '{version}' to a Version", version);
             }
+            if (!version.Equals(Version.ToString()))
+            {
+                throw new ArgumentException($"Could not convert '{version}' to a matching Version object, got '{Version}'\nNote that DBMigrator doesn't support leading zeroes", version);
+            }
         }
 
         public Feature AddAndOrGetFeature(string featureName)

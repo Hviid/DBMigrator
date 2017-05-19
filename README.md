@@ -48,7 +48,7 @@ Folder structure is as follows:
 
 Example:
 
-    1.00/US_12345/Migrations/
+    1.0/US_12345/Migrations/
 
 Note that DBMigrator should be at the same place as \<ReleaseVersion\> folder.
 

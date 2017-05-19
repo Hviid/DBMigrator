@@ -51,6 +51,7 @@ Example:
     1.0/US_12345/Migrations/
 
 Note that DBMigrator should be at the same place as \<ReleaseVersion\> folder or folder should be referenced by the -f paramether.
+
 Note that versions should not contain leading zeroes (1.0, 1.10 is ok while 1.00 and 1.01 is not)
 
 Script files should be named as follows:

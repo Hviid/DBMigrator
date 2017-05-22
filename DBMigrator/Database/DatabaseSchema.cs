@@ -116,7 +116,7 @@ namespace DBMigrator
         public void DowngradeDataWithFile(DowngradeScript script)
         {
             _database.ExecuteCommand(script.SQL);
-            _database.ExecuteCommand($"DELETE FROM DBVersionScripts WHERE Script = '{script.FileName}'");
+            _database.ExecuteCommand($"DELETE FROM DBVersionScripts WHERE Script = '{script.FileName.Replace("_rollback_","_")}'");
         }
 
         public List<DBVersion> GetDBState()

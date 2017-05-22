@@ -87,13 +87,13 @@ namespace DBMigrator.Console
                         Upgrade(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
                         break;
                     case "downgrade":
-                        Rollback(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory);
+                        Rollback(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
                         break;
                     case "validatedatabase":
-                        ValidateDatabase(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory);
+                        ValidateDatabase(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
                         break;
                     case "validateupgrade":
-                        ValidateUpgrade(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory);
+                        ValidateUpgrade(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
                         break;
                     default:
                         break;
@@ -132,7 +132,7 @@ namespace DBMigrator.Console
                 System.Console.ReadKey();
         }
 
-        private static void Rollback(string toVersion, string servername, string databasename, string username, string password, DirectoryInfo migrationsDir)
+        private static void Rollback(string toVersion, string servername, string databasename, string username, string password, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
             var database1 = new Database(servername, databasename, username, password);
             var dbVersions1 = database1.GetDBState();
@@ -144,30 +144,34 @@ namespace DBMigrator.Console
             dbfolder1.AddRollbacks(diff1);
             var diffText1 = differ1.DiffText(diff1);
             _logger.LogInformation(diffText1);
-            System.Console.ReadKey();
+            if (!noPrompt)
+                System.Console.ReadKey();
             var migrator = new Migrator(database1, dbfolder1);
             migrator.Rollback(diff1);
-            System.Console.ReadKey();
+            if (!noPrompt)
+                System.Console.ReadKey();
         }
 
-        private static void ValidateDatabase(string servername, string databasename, string username, string password, DirectoryInfo migrationsDir)
+        private static void ValidateDatabase(string servername, string databasename, string username, string password, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
             var database2 = new Database(servername, databasename, username, password);
             var dbVersions2 = database2.GetDBState();
             var dbfolder2 = new DBFolder(migrationsDir);
             var validator2 = new VersionValidator();
             validator2.ValidateVersions(dbfolder2.allVersions, dbVersions2);
+            if (!noPrompt)
             System.Console.ReadKey();
         }
 
-        private static void ValidateUpgrade(string toVersion, string servername, string databasename, string username, string password, DirectoryInfo migrationsDir)
+        private static void ValidateUpgrade(string toVersion, string servername, string databasename, string username, string password, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
             var database2 = new Database(servername, databasename, username, password);
             var dbVersions2 = database2.GetDBState();
             var dbfolder2 = new DBFolder(migrationsDir);
             var validator2 = new VersionValidator();
             validator2.ValidateVersions(dbfolder2.allVersions, dbVersions2);
-            System.Console.ReadKey();
+            if (!noPrompt)
+                System.Console.ReadKey();
         }
     }
 }

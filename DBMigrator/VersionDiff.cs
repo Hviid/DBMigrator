@@ -81,10 +81,11 @@ namespace DBMigrator
                                 diff.Add(diffVersion);
                             }
                             
+
                             var diffFeature = diffVersion.Features.SingleOrDefault(t => t.Name == targetFeature.Name);
                             if (diffFeature == null)
                             {
-                                diffVersion.AddAndOrGetFeature(targetFeature.Name);
+                                diffFeature = diffVersion.AddAndOrGetFeature(targetFeature.Name);
                             }
                             CopyUpgradeScriptToFeature(sourceUpgradeScript, diffFeature);
                         }

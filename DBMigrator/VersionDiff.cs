@@ -142,6 +142,7 @@ namespace DBMigrator
         {
             var script = target.AddFuncViewStoredProcedureTriggerScript(sourceScript.FileName, sourceScript.Type, sourceScript.Name, sourceScript.Order);
             script.SQL = sourceScript.SQL;
+            script.Checksum = sourceScript.Checksum;
         }
     }
 }

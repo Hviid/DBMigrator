@@ -135,6 +135,7 @@ namespace DBMigrator
         {
             var script = target.AddUpgradeScript(sourceScript.FileName, sourceScript.Order);
             script.SQL = sourceScript.SQL;
+            script.Checksum = sourceScript.Checksum;
         }
 
         private void CopyFuncsSPsViewsTriggersScriptToFeature(FuncViewStoredProcedureTriggerScript sourceScript, Feature target)

@@ -158,7 +158,9 @@ namespace DBMigrator.Console
             var dbVersions2 = database2.GetDBState();
             var dbfolder2 = new DBFolder(migrationsDir);
             var validator2 = new VersionValidator();
+            var DBValidator = new DatabaseValidator(database2);
             validator2.ValidateVersions(dbfolder2.allVersions, dbVersions2);
+            DBValidator.Validate();
             if (!noPrompt)
             System.Console.ReadKey();
         }

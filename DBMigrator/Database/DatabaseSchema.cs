@@ -19,56 +19,9 @@ namespace DBMigrator
             _database = database;
         }
 
-        public string CheckDatabaseVersion()
-        {
-            var version = "0.0.0.0";
-            try
-            {
-                _database.Sqlconn.Open();
-                //var data = ExecuteCommand("SELECT TOP 1 Version FROM DBVersion order by Date desc");
-                var data = _database.ExecuteCommand("SELECT TOP 1 Version FROM DBVersionScripts order by Date desc");
-                if (data.HasRows)
-                {
-                    data.Read();
-                    version = data.GetString(0);
-                    _logger.Log($"Found existing database version {version}");
-                }
-                _database.Sqlconn.Close();
-            }
-            catch (Exception ex)
-            {
-                _database.Sqlconn.Close();
-                CreateDBVersionTable();
-            }
-            return version;
-        }
-
-        private void CreateDBVersionTable2()
-        {
-            _logger.Log("Creating DBVersion table");
-            _database.ExecuteSingleCommand("CREATE TABLE DBVersion ([ID] [int] IDENTITY(1,1) NOT NULL, Version varchar(max) NOT NULL, Date datetime2 NOT NULL, Log xml NOT NULL, CONSTRAINT [PK_dbo.DBVersion] PRIMARY KEY CLUSTERED ([ID] ASC))");
-            _database.ExecuteSingleCommand("CREATE TABLE DBVersionScripts (DBVersionID int NOT NULL, Feature varchar(max) NOT NULL, [Order] int NOT NULL, Script varchar(max) NOT NULL, Type varchar(max) NOT NULL, [Checksum] varchar(max) NOT NULL, ExecutionTime int NOT NULL)");
-            _database.ExecuteSingleCommand("ALTER TABLE [DBVersionScripts] WITH CHECK ADD CONSTRAINT [FK.DBVersion.DBVersionScripts_DBVersionID] FOREIGN KEY([DBVersionID]) REFERENCES [DBVersion]([ID])");
-        }
-
         private void CreateDBVersionTable()
         {
             _logger.Log("Creating DBVersion table");
-            _database.ExecuteSingleCommand(@"CREATE TABLE DBVersionScripts (
-                            [ID] [int] IDENTITY(1,1) NOT NULL, 
-                            Date datetime2 NOT NULL, 
-                            Version varchar(max) NOT NULL, 
-                            Feature varchar(max) NOT NULL, 
-                            [Order] int NOT NULL, 
-                            Script varchar(max) NOT NULL, 
-                            Type varchar(max) NOT NULL, 
-                            [ScriptFileChecksum] varchar(max) NOT NULL, 
-                            [DatabaseTriggersChecksum] varchar(max) NOT NULL, 
-                            [DatabaseTablesAndViewsChecksum] varchar(max) NOT NULL, 
-                            [DatabaseFunctionsChecksum] varchar(max) NOT NULL, 
-                            [DatabaseStoredProceduresChecksum] varchar(max) NOT NULL, 
-                            [DatabaseIndexesChecksum] varchar(max) NOT NULL, 
-                            ExecutionTime int NOT NULL)");
         }
 
         public void UpdateDataWithFile(UpgradeScript script)

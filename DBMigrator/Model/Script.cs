@@ -28,13 +28,11 @@ namespace DBMigrator.Model
             Feature = feature;
             Order = order;
         }
-
         
         public string FileName { get; }
-        public string Checksum { get; set; }
-        public int ExecutionTime { get; set; }
         public DowngradeScript RollbackScript { get; set; }
         public string SQL { get; set; }
+        
     }
 }
 

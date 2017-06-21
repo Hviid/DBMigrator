@@ -4,65 +4,101 @@ using System.Text;
 
 namespace DBMigrator.SQL
 {
-    class ChecksumScripts
+    static class ChecksumScripts
     {
-        public string TablesViewsAndColumnsChecksumScript
+        public static string TablesViewsAndColumnsChecksumScript
         {
-            get => @"SELECT TABLE_SCHEMA, 
-                        DATA_TYPE, 
-                        TABLE_NAME, 
-                        COLUMN_NAME, 
-                        NUMERIC_PRECISION, 
-                        DATETIME_PRECISION, 
-                        CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS";
+            get => "SELECT TABLE_SCHEMA, " +
+                "DATA_TYPE, " +
+                "TABLE_NAME, " +
+                "COLUMN_NAME, " +
+                "NUMERIC_PRECISION, " +
+                "DATETIME_PRECISION, " +
+                "CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS";
         }
 
-        public string StoredProceduresChecksum
+        public static string StoredProceduresChecksum
         {
-            get => @"SELECT TABLE_SCHEMA, 
-                        DATA_TYPE, 
-                        TABLE_NAME, 
-                        COLUMN_NAME, 
-                        NUMERIC_PRECISION, 
-                        DATETIME_PRECISION, 
-                        CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS";
+            get => "SELECT" +
+                " [SPECIFIC_CATALOG]" +
+                ", [SPECIFIC_SCHEMA]" +
+                ", [SPECIFIC_NAME]" +
+                ", [ROUTINE_CATALOG]" +
+                ", [ROUTINE_SCHEMA]" +
+                ", [ROUTINE_NAME]" +
+                ", [ROUTINE_TYPE]" +
+                ", [DATA_TYPE]" +
+                ", [CHARACTER_MAXIMUM_LENGTH]" +
+                ", [CHARACTER_OCTET_LENGTH]" +
+                ", [NUMERIC_PRECISION]" +
+                ", [DATETIME_PRECISION]" +
+                ", [ROUTINE_BODY]" +
+                ", [ROUTINE_DEFINITION]" +
+                ", [IS_DETERMINISTIC]" +
+                ", [SQL_DATA_ACCESS]" +
+                ", [IS_NULL_CALL] FROM [INFORMATION_SCHEMA].[ROUTINES]" +
+                " WHERE ROUTINE_TYPE = 'PROCEDURE'";
         }
 
-        public string FunctionsChecksum
+        public static string FunctionsChecksum
         {
-            get => @"SELECT TABLE_SCHEMA, 
-                        DATA_TYPE, 
-                        TABLE_NAME, 
-                        COLUMN_NAME, 
-                        NUMERIC_PRECISION, 
-                        DATETIME_PRECISION, 
-                        CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS";
+            get => "SELECT" +
+                " [SPECIFIC_CATALOG]" +
+                ", [SPECIFIC_SCHEMA]" +
+                ", [SPECIFIC_NAME]" +
+                ", [ROUTINE_CATALOG]" +
+                ", [ROUTINE_SCHEMA]" +
+                ", [ROUTINE_NAME]" +
+                ", [ROUTINE_TYPE]" +
+                ", [DATA_TYPE]" +
+                ", [CHARACTER_MAXIMUM_LENGTH]" +
+                ", [CHARACTER_OCTET_LENGTH]" +
+                ", [NUMERIC_PRECISION]" +
+                ", [DATETIME_PRECISION]" +
+                ", [ROUTINE_BODY]" +
+                ", [ROUTINE_DEFINITION]" +
+                ", [IS_DETERMINISTIC]" +
+                ", [SQL_DATA_ACCESS]" +
+                ", [IS_NULL_CALL] FROM[INFORMATION_SCHEMA].[ROUTINES]" +
+                " WHERE ROUTINE_TYPE = 'FUNCTION'";
         }
-        public string TriggersChecksum
+        public static string TriggersChecksum
         {
-            get => @"SELECT TABLE_SCHEMA, 
-                        DATA_TYPE, 
-                        TABLE_NAME, 
-                        COLUMN_NAME, 
-                        NUMERIC_PRECISION, 
-                        DATETIME_PRECISION, 
-                        CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS";
+            get => "SELECT" +
+                " [name]" +
+                ", [sys].[all_objects].[object_id]" +
+                ", [principal_id]" +
+                ", [schema_id]" +
+                ", [parent_object_id]" +
+                ", [type]" +
+                ", [type_desc]" +
+                ", [is_ms_shipped]" +
+                ", [is_published]" +
+                ", [is_schema_published]" +
+                ", [definition] FROM[sys].[all_objects]" +
+                " INNER JOIN[sys].[sql_modules]" +
+                " ON[sys].[sql_modules].[object_id] = [sys].[all_objects].[object_id]" +
+                " WHERE type = 'TR'";
         }
-        public string IndexesChecksum
+        public static string IndexesChecksum
         {
-            get => @"SELECT TABLE_SCHEMA, 
-                        DATA_TYPE, 
-                        TABLE_NAME, 
-                        COLUMN_NAME, 
-                        NUMERIC_PRECISION, 
-                        DATETIME_PRECISION, 
-                        CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS";
+            get => "SELECT" +
+                " [CONSTRAINT_CATALOG]" +
+                ", [CONSTRAINT_SCHEMA]" +
+                ", [CONSTRAINT_NAME]" +
+                ", [TABLE_CATALOG]" +
+                ", [TABLE_SCHEMA]" +
+                ", [TABLE_NAME]" +
+                ", [CONSTRAINT_TYPE]" +
+                ", [IS_DEFERRABLE]" +
+                ", [INITIALLY_DEFERRED]" +
+                " FROM[INFORMATION_SCHEMA].[TABLE_CONSTRAINTS]";
         }
 
         //http://www.bidn.com/blogs/TomLannen/bidn-blog/2265/using-hashbytes-to-compare-columns
-        public string GetHashbytesFor(string query)
+        public static string GetHashbytesFor(string query)
         {
-            return $@"DECLARE @xml nvarchar(MAX) = ({query} FOR XML AUTO); SELECT HASHBYTES('SHA1', @xml)";
+            return $@"SELECT HASHBYTES('sha1', ({query} FOR XML AUTO))";
         }
     }
 }

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace DBMigrator.SQL
 {
-    class MigratorModelScripts
+    static class MigratorModelScripts
     {
-        public string CreateDBVersionScripts
+        public static string CreateDBVersionScriptsTable
         {
             get => @"CREATE TABLE DBVersionScripts (
                             [ID] [int] IDENTITY(1,1) NOT NULL, 
@@ -17,53 +17,59 @@ namespace DBMigrator.SQL
                             Script varchar(max) NOT NULL, 
                             Type varchar(max) NOT NULL, 
                             [ScriptFileChecksum] varchar(max) NOT NULL, 
-                            [DatabaseTriggersChecksum] varchar(max) NOT NULL, 
-                            [DatabaseTablesAndViewsChecksum] varchar(max) NOT NULL, 
-                            [DatabaseFunctionsChecksum] varchar(max) NOT NULL, 
-                            [DatabaseStoredProceduresChecksum] varchar(max) NOT NULL, 
-                            [DatabaseIndexesChecksum] varchar(max) NOT NULL, 
+                            [DatabaseTriggersChecksum] varbinary(max) NOT NULL, 
+                            [DatabaseTablesAndViewsChecksum] varbinary(max) NOT NULL, 
+                            [DatabaseFunctionsChecksum] varbinary(max) NOT NULL, 
+                            [DatabaseStoredProceduresChecksum] varbinary(max) NOT NULL, 
+                            [DatabaseIndexesChecksum] varbinary(max) NOT NULL, 
                             ExecutionTime int NOT NULL)";
         }
-
-        public string SelectDBVersionScriptsScript
+        /// <summary>
+        /// returns [Version], [Feature], [Order], [Script], [Type], [ScriptFileChecksum]
+        /// [ExecutionTime], Date, [DatabaseTriggersChecksum], [DatabaseTablesAndViewsChecksum]
+        /// [DatabaseFunctionsChecksum], [DatabaseStoredProceduresChecksum], [DatabaseIndexesChecksum]
+        /// </summary>
+        public static string SelectDBVersionScriptsScript
         {
-            get => "SELECT [Version], [Feature], [Order], [Script], [Type], [ScriptFileChecksum], [ExecutionTime] FROM [DBVersionScripts]";
+            get => "SELECT [Version], [Feature], [Order], [Script], [Type], [ScriptFileChecksum], " +
+                "[ExecutionTime], Date, [DatabaseTriggersChecksum], [DatabaseTablesAndViewsChecksum]," +
+                "[DatabaseFunctionsChecksum], [DatabaseStoredProceduresChecksum], [DatabaseIndexesChecksum] FROM [DBVersionScripts]";
         }
 
-        public string GetInsertDBVersionScript(string version, string order, string featurename, string filename, string checksum,
+        public static string GetInsertDBVersionScript(string version, int order, string featurename, string filename, string checksum,
             string databaseTriggersChecksum, string databaseTablesAndViewsChecksum, string databaseFunctionsChecksum, string databaseStoredProceduresChecksum,
             string databaseIndexesChecksum, int scriptExecutionTime)
         {
-            return $@"INSERT INTO DBVersionScripts (
-                                                [Version], 
-                                                [Date], 
-                                                [Order], 
-                                                Feature, 
-                                                Script, 
-                                                Type, 
-                                                ScriptFileChecksum, 
-                                                DatabaseTriggersChecksum, 
-                                                DatabaseTablesAndViewsChecksum, 
-                                                DatabaseFunctionsChecksum, 
-                                                DatabaseStoredProceduresChecksum, 
-                                                DatabaseIndexesChecksum, 
-                                                ExecutionTime) VALUES (
-                                                '{version}',
-                                                GETUTCDATE(), 
-                                                {order}, 
-                                                '{featurename}', 
-                                                '{filename}', 
-                                                'Upgrade', 
-                                                '{checksum}', 
-                                                '{databaseTriggersChecksum}', 
-                                                '{databaseTablesAndViewsChecksum}', 
-                                                '{databaseFunctionsChecksum}', 
-                                                '{databaseStoredProceduresChecksum}', 
-                                                '{databaseIndexesChecksum}', 
-                                                {scriptExecutionTime})";
+            return $"INSERT INTO DBVersionScripts (" +
+                    $"[Version], " +
+                    $"[Date], " +
+                    $"[Order], " +
+                    $"Feature, " +
+                    $"Script, " +
+                    $"Type, " +
+                    $"ScriptFileChecksum, " +
+                    $"DatabaseTriggersChecksum, " +
+                    $"DatabaseTablesAndViewsChecksum, " +
+                    $"DatabaseFunctionsChecksum, " +
+                    $"DatabaseStoredProceduresChecksum, " +
+                    $"DatabaseIndexesChecksum, " +
+                    $"ExecutionTime) VALUES (" +
+                    $"'{version}'," +
+                    $"GETUTCDATE(), " +
+                    $"{order}, " +
+                    $"'{featurename}', " +
+                    $"'{filename}', " +
+                    $"'Upgrade', " +
+                    $"'{checksum}', " +
+                    $"{databaseTriggersChecksum}, " +
+                    $"{databaseTablesAndViewsChecksum}, " +
+                    $"{databaseFunctionsChecksum}, " +
+                    $"{databaseStoredProceduresChecksum}, " +
+                    $"{databaseIndexesChecksum}, " +
+                    $"{scriptExecutionTime})";
         }
 
-        public string GetDeleteDBVersionScript(string rollbackFileName)
+        public static string GetDeleteDBVersionScript(string rollbackFileName)
         {
             return $"DELETE FROM DBVersionScripts WHERE Script = '{rollbackFileName}'";
         }

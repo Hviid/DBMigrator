@@ -5,6 +5,8 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography;
 using System.Collections.Generic;
+using System.Linq;
+using DBMigrator.SQL;
 
 namespace DBMigrator
 {
@@ -13,9 +15,6 @@ namespace DBMigrator
         public SqlConnection Sqlconn;
         private SqlTransaction trans;
         private Logger _logger;
-        private DatabaseSchema _databaseSchema;
-        private DatabaseFuncViewStoredProcedureTrigger _databaseFuncViewStoredProcedureTrigger;
-        private DatabaseData _databaseData;
 
 
         public Database(string servername, string database, string username, string password)
@@ -30,9 +29,6 @@ namespace DBMigrator
                 connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
             }
             SetupConnAndLogger(connectionString);
-            _databaseSchema = new DatabaseSchema(this);
-            _databaseFuncViewStoredProcedureTrigger = new DatabaseFuncViewStoredProcedureTrigger(this);
-            _databaseData = new DatabaseData(this);
         }
 
         public Database(string initialCatalog) // string mdfFilePath, 
@@ -46,37 +42,77 @@ namespace DBMigrator
             Sqlconn = new SqlConnection(connectionString);
         }
 
+        private void CreateDBVersionTable()
+        {
+            _logger.Log("Creating DBVersion table");
+            ExecuteSingleCommand(MigratorModelScripts.CreateDBVersionScriptsTable);
+        }
+
         public List<DBVersion> GetDBState()
         {
-            var versions = _databaseSchema.GetDBState();
-            _databaseFuncViewStoredProcedureTrigger.AppendDatabaseFuncViewStoredProcedureTriggerState(versions);
-            return versions;
+            Sqlconn.Open();
+            SqlDataReader reader;
+            var result = new List<DBVersion>();
+            try
+            {
+                reader = ExecuteCommand(MigratorModelScripts.SelectDBVersionScriptsScript);
+            }
+            catch (Exception ex)
+            {
+                Sqlconn.Close();
+                CreateDBVersionTable();
+                return result;
+            }
+
+            while (reader.Read())
+            {
+                var version = reader.GetString(0);
+
+                var dbversion = result.FirstOrDefault(v => v.Name == version);
+                if (dbversion == null)
+                {
+                    dbversion = new DBVersion(version);
+                    result.Add(dbversion);
+                }
+
+                string feature = null;
+                if (!reader.IsDBNull(1))
+                {
+                    feature = reader.GetString(1);
+                    var order = reader.GetInt32(2);
+                    var scriptFileName = reader.GetString(3);
+                    var type = reader.GetString(4);
+                    var checksum = reader.GetString(5);
+                    var executiontime = reader.GetInt32(6);
+
+                    var script = dbversion.AddAndOrGetFeature(feature).AddUpgradeScript(scriptFileName, order);
+                    script.Checksum = checksum;
+                }
+            }
+            Sqlconn.Close();
+            return result;
         }
 
-        public (string databaseTriggersChecksum, string DatabaseTablesAndViewsChecksum, string DatabaseFunctionsChecksum, string DatabaseStoredProceduresChecksum, string DatabaseIndexesChecksum) GetLatestMigrationChecksums()
+        public (byte[] databaseTriggersChecksum, byte[] DatabaseTablesAndViewsChecksum, byte[] DatabaseFunctionsChecksum, byte[] DatabaseStoredProceduresChecksum, byte[] DatabaseIndexesChecksum) GetLatestMigrationChecksums()
         {
-            return _databaseSchema.GetLatestMigrationChecksums();
-        }
+            Sqlconn.Open();
+            var data = ExecuteCommand("SELECT TOP 1 DatabaseTriggersChecksum, " +
+                "DatabaseTablesAndViewsChecksum, " +
+                "DatabaseFunctionsChecksum, " +
+                "DatabaseStoredProceduresChecksum, " +
+                "DatabaseIndexesChecksum FROM [DBVersionScripts] order by [Date] desc");
 
-        public void UpgradeSchema(UpgradeScript script)
-        {
-            _databaseSchema.UpdateDataWithFile(script);
-        }
+            if (!data.Read())
+                return (null, null, null, null, null);
 
-        public void DowngradeShema(DowngradeScript script)
-        {
-            _databaseSchema.DowngradeDataWithFile(script);
-        }
+            var databaseTriggersChecksum = (byte [])data.GetValue(0);
+            var DatabaseTablesAndViewsChecksum = (byte[])data.GetValue(1);
+            var DatabaseFunctionsChecksum = (byte[])data.GetValue(2);
+            var DatabaseStoredProceduresChecksum = (byte[])data.GetValue(3);
+            var DatabaseIndexesChecksum = (byte[])data.GetValue(4);
 
-        public void UpgradeFuncViewStoredProcedureTrigger(FuncViewStoredProcedureTriggerScript script)
-        {
-            _databaseFuncViewStoredProcedureTrigger.UpdateDataWithFile(script);
-        }
-
-        public void UpdateDatabaseVersion(DBVersion version)
-        {
-            var versionStr = version.Version.ToString();
-            _logger.Log($"Updating DBVersion version to {versionStr}");
+            Sqlconn.Close();
+            return (databaseTriggersChecksum, DatabaseTablesAndViewsChecksum, DatabaseFunctionsChecksum, DatabaseStoredProceduresChecksum, DatabaseIndexesChecksum);
         }
 
         public void ExecuteSingleCommand(string cmd)

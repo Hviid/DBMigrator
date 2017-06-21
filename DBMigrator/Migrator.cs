@@ -110,11 +110,11 @@ namespace DBMigrator
         {
             var sw = new Stopwatch();
             sw.Start();
-            _database.ExecuteCommand(script.SQL);
+            _database.ExecuteSingleCommand(script.SQL);
             sw.Stop();
             script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
 
-            _database.ExecuteCommand(MigratorModelScripts.GetInsertDBVersionScript(
+            _database.ExecuteSingleCommand(MigratorModelScripts.GetInsertDBVersionScript(
                 script.Feature.Version.Name,
                 script.Order,
                 script.Feature.Name,
@@ -125,14 +125,14 @@ namespace DBMigrator
                 $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.FunctionsChecksum)})",
                 $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.StoredProceduresChecksum)})",
                 $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum)})",
-                script.ExecutionTime
-                ));
+                script.ExecutionTime.Value
+            ));
         }
 
         private void DowngradeWithFile(DowngradeScript script)
         {
-            _database.ExecuteCommand(script.SQL);
-            _database.ExecuteCommand(MigratorModelScripts.GetDeleteDBVersionScript(script.FileName.Replace("_rollback_", "_")));
+            _database.ExecuteSingleCommand(script.SQL);
+            _database.ExecuteSingleCommand(MigratorModelScripts.GetDeleteDBVersionScript(script.FileName.Replace("_rollback_", "_")));
         }
 
         public void Dispose()

@@ -18,49 +18,22 @@ namespace DBMigrator
 
         public void Validate()
         {
-            _database.BeginTransaction();
-
-            var reader = _database.ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.FunctionsChecksum));
-            reader.Read();
-            var currentFunctionsChecksum = ((byte [])reader.GetValue(0));
-            reader.Close();
-
-            reader = _database.ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum));
-            reader.Read();
-            var currentIndexesChecksum = ((byte[])reader.GetValue(0));
-            reader.Close();
-
-            reader = _database.ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.StoredProceduresChecksum));
-            reader.Read();
-            var currentStoredProceduresChecksum = ((byte[])reader.GetValue(0));
-            reader.Close();
-            
-            reader = _database.ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.TablesViewsAndColumnsChecksumScript));
-            reader.Read();
-            var currentTablesViewsAndColumnsChecksum = ((byte[])reader.GetValue(0));
-            reader.Close();
-            
-            reader = _database.ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.TriggersChecksum));
-            reader.Read();
-            var currentTriggersChecksum = ((byte[])reader.GetValue(0));
-            reader.Close();
-
-            _database.CommitTransaction();
-
-            var latest =  _database.GetLatestMigrationChecksums();
+            var latest = _database.GetLatestMigrationChecksums();
             if (latest.DatabaseTablesAndViewsChecksum == null)
                 return;
-            
-            if (latest.DatabaseFunctionsChecksum != currentFunctionsChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {currentFunctionsChecksum} does not match latest migration checksum {latest.DatabaseFunctionsChecksum}");
-            if (latest.DatabaseIndexesChecksum != currentIndexesChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {currentIndexesChecksum} does not match latest migration checksum {latest.DatabaseIndexesChecksum}");
-            if (latest.DatabaseStoredProceduresChecksum != currentStoredProceduresChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {currentStoredProceduresChecksum} does not match latest migration checksum {latest.DatabaseStoredProceduresChecksum}");
-            if (latest.DatabaseTablesAndViewsChecksum != currentTablesViewsAndColumnsChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {currentTablesViewsAndColumnsChecksum} does not match latest migration checksum {latest.DatabaseTablesAndViewsChecksum}");
-            if (latest.databaseTriggersChecksum != currentTriggersChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {currentTriggersChecksum} does not match latest migration checksum {latest.databaseTriggersChecksum}");
+
+            var current = _database.GetDatabaseCurrentChecksums();
+
+            if (latest.DatabaseFunctionsChecksum != current.DatabaseFunctionsChecksum)
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseFunctionsChecksum} does not match latest migration checksum {latest.DatabaseFunctionsChecksum}");
+            if (latest.DatabaseIndexesChecksum != current.DatabaseIndexesChecksum)
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseIndexesChecksum} does not match latest migration checksum {latest.DatabaseIndexesChecksum}");
+            if (latest.DatabaseStoredProceduresChecksum != current.DatabaseStoredProceduresChecksum)
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseStoredProceduresChecksum} does not match latest migration checksum {latest.DatabaseStoredProceduresChecksum}");
+            if (latest.DatabaseTablesAndViewsChecksum != current.DatabaseTablesAndViewsChecksum)
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseTablesAndViewsChecksum} does not match latest migration checksum {latest.DatabaseTablesAndViewsChecksum}");
+            if (latest.databaseTriggersChecksum != current.databaseTriggersChecksum)
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.databaseTriggersChecksum} does not match latest migration checksum {latest.databaseTriggersChecksum}");
         }
     }
 }

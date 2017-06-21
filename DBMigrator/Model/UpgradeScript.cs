@@ -8,7 +8,7 @@ namespace DBMigrator.Model
     public class UpgradeScript : Script
     {
         public string Checksum { get; set; }
-        public int ExecutionTime { get; set; }
+        public int? ExecutionTime { get; set; }
 
         public UpgradeScript(string fileName, int order, Feature feature) : base(fileName, order, feature)
         {

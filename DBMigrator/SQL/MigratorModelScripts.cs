@@ -17,11 +17,11 @@ namespace DBMigrator.SQL
                             Script varchar(max) NOT NULL, 
                             Type varchar(max) NOT NULL, 
                             [ScriptFileChecksum] varchar(max) NOT NULL, 
-                            [DatabaseTriggersChecksum] varbinary(max) NOT NULL, 
-                            [DatabaseTablesAndViewsChecksum] varbinary(max) NOT NULL, 
-                            [DatabaseFunctionsChecksum] varbinary(max) NOT NULL, 
-                            [DatabaseStoredProceduresChecksum] varbinary(max) NOT NULL, 
-                            [DatabaseIndexesChecksum] varbinary(max) NOT NULL, 
+                            [DatabaseTriggersChecksum] varbinary(max) NULL, 
+                            [DatabaseTablesAndViewsChecksum] varbinary(max) NULL, 
+                            [DatabaseFunctionsChecksum] varbinary(max) NULL, 
+                            [DatabaseStoredProceduresChecksum] varbinary(max) NULL, 
+                            [DatabaseIndexesChecksum] varbinary(max) NULL, 
                             ExecutionTime int NOT NULL)";
         }
         /// <summary>

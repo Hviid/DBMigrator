@@ -31,11 +31,6 @@ namespace DBMigrator
             SetupConnAndLogger(connectionString);
         }
 
-        public Database(string initialCatalog) // string mdfFilePath, 
-        {
-            var connectionString = $@"Data Source=(localdb)\v11.0;Integrated Security=True;User Instance=False;Initial Catalog={initialCatalog}";
-            SetupConnAndLogger(connectionString);
-        }
         private void SetupConnAndLogger(string connectionString)
         {
             _logger = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<Logger>();
@@ -87,13 +82,18 @@ namespace DBMigrator
 
                     var script = dbversion.AddAndOrGetFeature(feature).AddUpgradeScript(scriptFileName, order);
                     script.Checksum = checksum;
+                    script.ExecutionTime = executiontime;
                 }
             }
             Sqlconn.Close();
             return result;
         }
 
-        public (byte[] databaseTriggersChecksum, byte[] DatabaseTablesAndViewsChecksum, byte[] DatabaseFunctionsChecksum, byte[] DatabaseStoredProceduresChecksum, byte[] DatabaseIndexesChecksum) GetLatestMigrationChecksums()
+        public (byte[] databaseTriggersChecksum, 
+            byte[] DatabaseTablesAndViewsChecksum, 
+            byte[] DatabaseFunctionsChecksum, 
+            byte[] DatabaseStoredProceduresChecksum, 
+            byte[] DatabaseIndexesChecksum) GetLatestMigrationChecksums()
         {
             Sqlconn.Open();
             var data = ExecuteCommand("SELECT TOP 1 DatabaseTriggersChecksum, " +
@@ -115,16 +115,70 @@ namespace DBMigrator
             return (databaseTriggersChecksum, DatabaseTablesAndViewsChecksum, DatabaseFunctionsChecksum, DatabaseStoredProceduresChecksum, DatabaseIndexesChecksum);
         }
 
+        public (byte[] databaseTriggersChecksum,
+            byte[] DatabaseTablesAndViewsChecksum,
+            byte[] DatabaseFunctionsChecksum,
+            byte[] DatabaseStoredProceduresChecksum,
+            byte[] DatabaseIndexesChecksum) GetDatabaseCurrentChecksums()
+        {
+            BeginTransaction();
+
+            byte[] currentFunctionsChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.FunctionsChecksum))){
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentFunctionsChecksum = ((byte[])reader.GetValue(0));
+            }
+
+            byte[] currentIndexesChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum))) {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentIndexesChecksum = ((byte[])reader.GetValue(0));
+            }
+
+            byte[] currentStoredProceduresChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.StoredProceduresChecksum)))
+            {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentStoredProceduresChecksum = ((byte[])reader.GetValue(0));
+            }
+
+            byte[] currentTablesViewsAndColumnsChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.TablesViewsAndColumnsChecksumScript)))
+            {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentTablesViewsAndColumnsChecksum = ((byte[])reader.GetValue(0));
+            }
+
+            byte[] currentTriggersChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.TriggersChecksum)))
+            {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentTriggersChecksum = ((byte[])reader.GetValue(0));
+            }
+
+            CommitTransaction();
+
+            return (currentTriggersChecksum, currentTablesViewsAndColumnsChecksum, currentFunctionsChecksum, currentStoredProceduresChecksum, currentIndexesChecksum);
+        }
+
         public void ExecuteSingleCommand(string cmd)
         {
-            Sqlconn.Open();
+            var alreadyOpen = Sqlconn.State == System.Data.ConnectionState.Open;
+            if(!alreadyOpen)
+                Sqlconn.Open();
             try
             {
-                ExecuteCommand(cmd);
+                using (ExecuteCommand(cmd)) { }
             }
             finally
             {
-                Sqlconn.Close();
+                if(!alreadyOpen)
+                    Sqlconn.Close();
             }
         }
 

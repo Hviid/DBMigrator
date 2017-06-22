@@ -156,5 +156,26 @@ namespace DBMigrator
             return result;
         }
 
+        public (string databaseTriggersChecksum, string DatabaseTablesAndViewsChecksum, string DatabaseFunctionsChecksum, string DatabaseStoredProceduresChecksum, string DatabaseIndexesChecksum) GetLatestMigrationChecksums()
+        {
+            _database.Sqlconn.Open();
+            var data = _database.ExecuteCommand("SELECT TOP 1 DatabaseTriggersChecksum, " +
+                "DatabaseTablesAndViewsChecksum, " +
+                "DatabaseFunctionsChecksum, " +
+                "DatabaseStoredProceduresChecksum, " +
+                "DatabaseIndexesChecksum FROM [DBVersionScripts] order by [Date] desc");
+
+            data.Read();
+
+            var databaseTriggersChecksum = data.GetString(0);
+            var DatabaseTablesAndViewsChecksum = data.GetString(1);
+            var DatabaseFunctionsChecksum = data.GetString(2);
+            var DatabaseStoredProceduresChecksum = data.GetString(3);
+            var DatabaseIndexesChecksum = data.GetString(4);
+
+            _database.Sqlconn.Close();
+            return (databaseTriggersChecksum, DatabaseTablesAndViewsChecksum, DatabaseFunctionsChecksum, DatabaseStoredProceduresChecksum, DatabaseIndexesChecksum);
+        }
+
     }
 }

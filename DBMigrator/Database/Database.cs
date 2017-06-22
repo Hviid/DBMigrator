@@ -53,6 +53,11 @@ namespace DBMigrator
             return versions;
         }
 
+        public (string databaseTriggersChecksum, string DatabaseTablesAndViewsChecksum, string DatabaseFunctionsChecksum, string DatabaseStoredProceduresChecksum, string DatabaseIndexesChecksum) GetLatestMigrationChecksums()
+        {
+            return _databaseSchema.GetLatestMigrationChecksums();
+        }
+
         public void UpgradeSchema(UpgradeScript script)
         {
             _databaseSchema.UpdateDataWithFile(script);

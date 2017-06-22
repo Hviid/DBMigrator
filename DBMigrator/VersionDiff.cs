@@ -7,10 +7,8 @@ namespace DBMigrator
 {
     public class VersionDiff
     {
-        private string executingPath;
         public VersionDiff()
         {
-            executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
         }
 
         public string DiffText(List<DBVersion> diff)
@@ -103,6 +101,7 @@ namespace DBMigrator
         {
             var script = target.AddUpgradeScript(sourceScript.FileName, sourceScript.Order);
             script.SQL = sourceScript.SQL;
+            script.Checksum = sourceScript.Checksum;
         }
     }
 }

@@ -7,10 +7,8 @@ namespace DBMigrator
 {
     public class VersionDiff
     {
-        private string executingPath;
         public VersionDiff()
         {
-            executingPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
         }
 
         public string DiffText(List<DBVersion> diff)
@@ -24,11 +22,6 @@ namespace DBMigrator
                     str += $"--feature: {feature.Name} \n";
                     str += $"---Upgrades: \n";
                     foreach (var script in feature.UpgradeScripts)
-                    {
-                        str += $"----script: {script.FileName} \n";
-                    }
-                    str += $"---FuncsSPsViewsTriggers: \n";
-                    foreach (var script in feature.FuncsSPsViewsTriggersScripts)
                     {
                         str += $"----script: {script.FileName} \n";
                     }
@@ -90,27 +83,6 @@ namespace DBMigrator
                             CopyUpgradeScriptToFeature(sourceUpgradeScript, diffFeature);
                         }
                     }
-
-                    foreach (var sourceFuncsSPsViewsTriggersScript in sourceFeature.FuncsSPsViewsTriggersScripts)
-                    {
-                        var targetScript = targetFeature.FuncsSPsViewsTriggersScripts.SingleOrDefault(s => s.FileName == sourceFuncsSPsViewsTriggersScript.FileName);
-                        if (targetScript == null)
-                        {
-                            var diffVersion = diff.SingleOrDefault(t => t.Name == targetVersion.Name);
-                            if (diffVersion == null)
-                            {
-                                diffVersion = new DBVersion(targetVersion.Name);
-                                diff.Add(diffVersion);
-                            }
-
-                            var diffFeature = diffVersion.Features.SingleOrDefault(t => t.Name == targetFeature.Name);
-                            if (diffFeature == null)
-                            {
-                                diffVersion.AddAndOrGetFeature(targetFeature.Name);
-                            }
-                            CopyFuncsSPsViewsTriggersScriptToFeature(sourceFuncsSPsViewsTriggersScript, diffFeature);
-                        }
-                    }
                 }
             }
             return diff;
@@ -123,24 +95,11 @@ namespace DBMigrator
             {
                 CopyUpgradeScriptToFeature(script, feature);
             }
-
-            foreach (var script in sourceFeature.FuncsSPsViewsTriggersScripts)
-            {
-                CopyFuncsSPsViewsTriggersScriptToFeature(script, feature);
-            }
-
         }
 
         private void CopyUpgradeScriptToFeature(UpgradeScript sourceScript, Feature target)
         {
             var script = target.AddUpgradeScript(sourceScript.FileName, sourceScript.Order);
-            script.SQL = sourceScript.SQL;
-            script.Checksum = sourceScript.Checksum;
-        }
-
-        private void CopyFuncsSPsViewsTriggersScriptToFeature(FuncViewStoredProcedureTriggerScript sourceScript, Feature target)
-        {
-            var script = target.AddFuncViewStoredProcedureTriggerScript(sourceScript.FileName, sourceScript.Type, sourceScript.Name, sourceScript.Order);
             script.SQL = sourceScript.SQL;
             script.Checksum = sourceScript.Checksum;
         }

@@ -5,6 +5,8 @@ using DBMigrator.Model;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace DBMigrator.Console
 {
@@ -97,6 +99,11 @@ namespace DBMigrator.Console
                     default:
                         break;
                 }
+                if (!noPromptArg.HasValue())
+                {
+                    _logger.LogInformation("Press any key to exit.");
+                    System.Console.ReadKey();
+                }
                 return 0;
             });
             commandLineApplication.Execute(args);
@@ -109,24 +116,45 @@ namespace DBMigrator.Console
             //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
-        private static void Upgrade(string toVersion, string servername, string databasename, string username, string password, DirectoryInfo migrationsDir, bool noPrompt = false)
+        private static async void Upgrade(string toVersion, string servername, string databasename, string username, string password, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
             var database = new Database(servername, databasename, username, password);
             var dbfolder = new DBFolder(migrationsDir);
             _logger.LogDebug($"Reading from {migrationsDir.FullName}");
             var dbVersions = database.GetDBState();
             var differ = new VersionDiff();
-
+            _logger.LogInformation("Calculating diff");
             var diff = differ.Diff(dbfolder.GetVersions(toVersion), dbVersions);
+            if(diff.Count > 0)
+            {
+                var diffText = differ.DiffText(diff);
+                _logger.LogInformation(diffText);
+                if (!noPrompt)
+                {
+                    _logger.LogInformation("Apply updates? Press any key to continue upgrade.");
+                    System.Console.ReadKey();
+                }
+                var migrator = new Migrator(database, dbfolder);
+                var i = 0;
 
-            var diffText = differ.DiffText(diff);
-            _logger.LogInformation(diffText);
-            if(!noPrompt)
-                System.Console.ReadKey();
-            var migrator = new Migrator(database, dbfolder);
-            migrator.Upgrade(diff);
-            if (!noPrompt)
-                System.Console.ReadKey();
+                void callback(object args){
+                    System.Console.Write("\r{0}%", i++);
+                }
+
+                var timer = new Timer(callback, null, 0, 1000);
+                await Task.Run(() => migrator.Upgrade(diff));
+                timer.Dispose();
+
+                if (!noPrompt)
+                {
+                    _logger.LogInformation("Upgrade completed.");
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Database is up to date.");
+            }
+            
         }
 
         private static void Rollback(string toVersion, string servername, string databasename, string username, string password, DirectoryInfo migrationsDir, bool noPrompt = false)
@@ -136,15 +164,24 @@ namespace DBMigrator.Console
             var dbfolder1 = new DBFolder(migrationsDir);
             var differ1 = new VersionDiff();
             var diff1 = differ1.Diff(dbVersions1, dbfolder1.GetVersions(toVersion));
-            dbfolder1.AddRollbacks(diff1);
-            var diffText1 = differ1.DiffText(diff1);
-            _logger.LogInformation(diffText1);
-            if (!noPrompt)
-                System.Console.ReadKey();
-            var migrator = new Migrator(database1, dbfolder1);
-            migrator.Rollback(diff1);
-            if (!noPrompt)
-                System.Console.ReadKey();
+            if (diff1.Count > 0)
+            {
+                dbfolder1.AddRollbacks(diff1);
+                var diffText1 = differ1.DiffText(diff1);
+                _logger.LogInformation(diffText1);
+                if (!noPrompt)
+                {
+                    _logger.LogInformation("Press any key to continue downgrade.");
+                    System.Console.ReadKey();
+                }
+
+                var migrator = new Migrator(database1, dbfolder1);
+                migrator.Rollback(diff1);
+            }
+            else
+            {
+                _logger.LogInformation("Database already downgraded.");
+            }
         }
 
         private static void ValidateDatabase(string servername, string databasename, string username, string password, DirectoryInfo migrationsDir, bool noPrompt = false)
@@ -154,10 +191,12 @@ namespace DBMigrator.Console
             var dbfolder2 = new DBFolder(migrationsDir);
             var validator2 = new VersionValidator();
             var DBValidator = new DatabaseValidator(database2);
+            _logger.LogInformation("Validating DB script state");
             validator2.ValidateVersions(dbfolder2.allVersions, dbVersions2);
+            _logger.LogInformation("DB script state validation passed");
+            _logger.LogInformation("Validating DB integrity");
             DBValidator.Validate();
-            if (!noPrompt)
-            System.Console.ReadKey();
+            _logger.LogInformation("DB integrity validation passed");
         }
     }
 }

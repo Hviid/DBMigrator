@@ -5,6 +5,8 @@ using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography;
 using System.Collections.Generic;
+using System.Linq;
+using DBMigrator.SQL;
 
 namespace DBMigrator
 {
@@ -13,9 +15,6 @@ namespace DBMigrator
         public SqlConnection Sqlconn;
         private SqlTransaction trans;
         private Logger _logger;
-        private DatabaseSchema _databaseSchema;
-        private DatabaseFuncViewStoredProcedureTrigger _databaseFuncViewStoredProcedureTrigger;
-        private DatabaseData _databaseData;
 
 
         public Database(string servername, string database, string username, string password)
@@ -30,77 +29,156 @@ namespace DBMigrator
                 connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
             }
             SetupConnAndLogger(connectionString);
-            _databaseSchema = new DatabaseSchema(this);
-            _databaseFuncViewStoredProcedureTrigger = new DatabaseFuncViewStoredProcedureTrigger(this);
-            _databaseData = new DatabaseData(this);
         }
 
-        public Database(string initialCatalog) // string mdfFilePath, 
-        {
-            var connectionString = $@"Data Source=(localdb)\v11.0;Integrated Security=True;User Instance=False;Initial Catalog={initialCatalog}";
-            SetupConnAndLogger(connectionString);
-        }
         private void SetupConnAndLogger(string connectionString)
         {
             _logger = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<Logger>();
             Sqlconn = new SqlConnection(connectionString);
         }
 
+        private void CreateDBVersionTable()
+        {
+            _logger.Log("Creating DBVersion table");
+            ExecuteSingleCommand(MigratorModelScripts.CreateDBVersionScriptsTable);
+        }
+
         public List<DBVersion> GetDBState()
         {
-            var versions = _databaseSchema.GetDBState();
-            _databaseFuncViewStoredProcedureTrigger.AppendDatabaseFuncViewStoredProcedureTriggerState(versions);
-            return versions;
+            Sqlconn.Open();
+            SqlDataReader reader;
+            var result = new List<DBVersion>();
+            try
+            {
+                reader = ExecuteCommand(MigratorModelScripts.SelectDBVersionScriptsScript);
+            }
+            catch (Exception ex)
+            {
+                Sqlconn.Close();
+                CreateDBVersionTable();
+                return result;
+            }
+
+            while (reader.Read())
+            {
+                var version = reader.GetString(0);
+
+                var dbversion = result.FirstOrDefault(v => v.Name == version);
+                if (dbversion == null)
+                {
+                    dbversion = new DBVersion(version);
+                    result.Add(dbversion);
+                }
+
+                string feature = null;
+                if (!reader.IsDBNull(1))
+                {
+                    feature = reader.GetString(1);
+                    var order = reader.GetInt32(2);
+                    var scriptFileName = reader.GetString(3);
+                    var type = reader.GetString(4);
+                    var checksum = reader.GetString(5);
+                    var executiontime = reader.GetInt32(6);
+
+                    var script = dbversion.AddAndOrGetFeature(feature).AddUpgradeScript(scriptFileName, order);
+                    script.Checksum = checksum;
+                    script.ExecutionTime = executiontime;
+                }
+            }
+            Sqlconn.Close();
+            return result;
         }
 
-        public (string databaseTriggersChecksum, string DatabaseTablesAndViewsChecksum, string DatabaseFunctionsChecksum, string DatabaseStoredProceduresChecksum, string DatabaseIndexesChecksum) GetLatestMigrationChecksums()
+        public (byte[] databaseTriggersChecksum, 
+            byte[] DatabaseTablesAndViewsChecksum, 
+            byte[] DatabaseFunctionsChecksum, 
+            byte[] DatabaseStoredProceduresChecksum, 
+            byte[] DatabaseIndexesChecksum) GetLatestMigrationChecksums()
         {
-            return _databaseSchema.GetLatestMigrationChecksums();
+            Sqlconn.Open();
+            var data = ExecuteCommand("SELECT TOP 1 DatabaseTriggersChecksum, " +
+                "DatabaseTablesAndViewsChecksum, " +
+                "DatabaseFunctionsChecksum, " +
+                "DatabaseStoredProceduresChecksum, " +
+                "DatabaseIndexesChecksum FROM [DBVersionScripts] order by [Date] desc");
+
+            if (!data.Read())
+                return (null, null, null, null, null);
+
+            var databaseTriggersChecksum = (byte [])data.GetValue(0);
+            var DatabaseTablesAndViewsChecksum = (byte[])data.GetValue(1);
+            var DatabaseFunctionsChecksum = (byte[])data.GetValue(2);
+            var DatabaseStoredProceduresChecksum = (byte[])data.GetValue(3);
+            var DatabaseIndexesChecksum = (byte[])data.GetValue(4);
+
+            Sqlconn.Close();
+            return (databaseTriggersChecksum, DatabaseTablesAndViewsChecksum, DatabaseFunctionsChecksum, DatabaseStoredProceduresChecksum, DatabaseIndexesChecksum);
         }
 
-        public void UpgradeSchema(UpgradeScript script)
+        public (byte[] databaseTriggersChecksum,
+            byte[] DatabaseTablesAndViewsChecksum,
+            byte[] DatabaseFunctionsChecksum,
+            byte[] DatabaseStoredProceduresChecksum,
+            byte[] DatabaseIndexesChecksum) GetDatabaseCurrentChecksums()
         {
-            _databaseSchema.UpdateDataWithFile(script);
-        }
+            BeginTransaction();
 
-        public void DowngradeShema(DowngradeScript script)
-        {
-            _databaseSchema.DowngradeDataWithFile(script);
-        }
+            byte[] currentFunctionsChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.FunctionsChecksum))){
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentFunctionsChecksum = ((byte[])reader.GetValue(0));
+            }
 
-        public void UpgradeFuncViewStoredProcedureTrigger(FuncViewStoredProcedureTriggerScript script)
-        {
-            _databaseFuncViewStoredProcedureTrigger.UpdateDataWithFile(script);
-        }
+            byte[] currentIndexesChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum))) {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentIndexesChecksum = ((byte[])reader.GetValue(0));
+            }
 
-        public void UpdateDatabaseVersion(DBVersion version)
-        {
-            var versionStr = version.Version.ToString();
-            _logger.Log($"Updating DBVersion version to {versionStr}");
-            //var data = ExecuteCommand($"INSERT INTO DBVersion (Version, Date, Log) OUTPUT Inserted.ID VALUES ('{versionStr}', GETUTCDATE(), '<xml>' + CHAR(13) + '{_logger.log.ToString()}</xml>')");
-            
-            //using (data)
-            //{
-            //    data.Read();
-            //    version.ID = data.GetInt32(0);
-            //}
-        }
+            byte[] currentStoredProceduresChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.StoredProceduresChecksum)))
+            {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentStoredProceduresChecksum = ((byte[])reader.GetValue(0));
+            }
 
-        public void UpdateLog(DBVersion version)
-        {
-            //ExecuteCommand($"UPDATE DBVersion SET Log = '<xml>' + CHAR(13) + '{_logger.log.ToString()}</xml>' WHERE ID = {version.ID}");
+            byte[] currentTablesViewsAndColumnsChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.TablesViewsAndColumnsChecksumScript)))
+            {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentTablesViewsAndColumnsChecksum = ((byte[])reader.GetValue(0));
+            }
+
+            byte[] currentTriggersChecksum = null;
+            using (var reader = ExecuteCommand(ChecksumScripts.GetHashbytesFor(ChecksumScripts.TriggersChecksum)))
+            {
+                reader.Read();
+                if (!reader.IsDBNull(0))
+                    currentTriggersChecksum = ((byte[])reader.GetValue(0));
+            }
+
+            CommitTransaction();
+
+            return (currentTriggersChecksum, currentTablesViewsAndColumnsChecksum, currentFunctionsChecksum, currentStoredProceduresChecksum, currentIndexesChecksum);
         }
 
         public void ExecuteSingleCommand(string cmd)
         {
-            Sqlconn.Open();
+            var alreadyOpen = Sqlconn.State == System.Data.ConnectionState.Open;
+            if(!alreadyOpen)
+                Sqlconn.Open();
             try
             {
-                ExecuteCommand(cmd);
+                using (ExecuteCommand(cmd)) { }
             }
             finally
             {
-                Sqlconn.Close();
+                if(!alreadyOpen)
+                    Sqlconn.Close();
             }
         }
 
@@ -136,161 +214,6 @@ namespace DBMigrator
         {
             Sqlconn.Close();
         }
-
-        
-        //http://www.bidn.com/blogs/TomLannen/bidn-blog/2265/using-hashbytes-to-compare-columns
-        public string GetTablesViewsAndColumnsChecksum()
-        {
-            var query = @"SELECT HASHBYTES('SHA1', TABLE_SCHEMA + '|' 
-						+ DATA_TYPE + '|' 
-						+ TABLE_NAME + '|' 
-						+ COLUMN_NAME + '|' 
-						+ CAST(ISNULL(NUMERIC_PRECISION, 0) as varchar(max)) + '|' 
-						+ CAST(ISNULL(DATETIME_PRECISION, 0) as varchar(max)) + '|' 
-						+ CAST(ISNULL(CHARACTER_MAXIMUM_LENGTH, 0) as varchar(max)) + '|' 
-                        ) FROM INFORMATION_SCHEMA.COLUMNS";
-            
-            return CheckSumHelper2(query);
-        }
-
-        public int GetStoredProceduresChecksum()
-        {
-            var query = @"SELECT
-                        CHECKSUM_AGG(CHECKSUM
-                        ([SPECIFIC_CATALOG]
-                              , [SPECIFIC_SCHEMA]
-                              , [SPECIFIC_NAME]
-                              , [ROUTINE_CATALOG]
-                              , [ROUTINE_SCHEMA]
-                              , [ROUTINE_NAME]
-                              , [ROUTINE_TYPE]
-                              , [DATA_TYPE]
-                              , [CHARACTER_MAXIMUM_LENGTH]
-                              , [CHARACTER_OCTET_LENGTH]
-                              , [NUMERIC_PRECISION]
-                              , [DATETIME_PRECISION]
-                              , [ROUTINE_BODY]
-                              , [ROUTINE_DEFINITION]
-                              , [IS_DETERMINISTIC]
-                              , [SQL_DATA_ACCESS]
-                              , [IS_NULL_CALL])) as StoredProceduresChecksum
-                         FROM [INFORMATION_SCHEMA].[ROUTINES]
-                        WHERE ROUTINE_TYPE = 'PROCEDURE'";
-
-            return CheckSumHelper(query);
-        }
-
-        public int GetFunctionsChecksum()
-        {
-            var query = @"SELECT
-                        CHECKSUM_AGG(CHECKSUM
-                        ([SPECIFIC_CATALOG]
-                              , [SPECIFIC_SCHEMA]
-                              , [SPECIFIC_NAME]
-                              , [ROUTINE_CATALOG]
-                              , [ROUTINE_SCHEMA]
-                              , [ROUTINE_NAME]
-                              , [ROUTINE_TYPE]
-                              , [DATA_TYPE]
-                              , [CHARACTER_MAXIMUM_LENGTH]
-                              , [CHARACTER_OCTET_LENGTH]
-                              , [NUMERIC_PRECISION]
-                              , [DATETIME_PRECISION]
-                              , [ROUTINE_BODY]
-                              , [ROUTINE_DEFINITION]
-                              , [IS_DETERMINISTIC]
-                              , [SQL_DATA_ACCESS]
-                              , [IS_NULL_CALL])) as FunctionsChecksum
-                         FROM [INFORMATION_SCHEMA].[ROUTINES]
-                        WHERE ROUTINE_TYPE = 'FUNCTION'";
-
-            return CheckSumHelper(query);
-        }
-
-        public int GetTriggersChecksum()
-        {
-            var query = @"SELECT
-                        CHECKSUM_AGG(CHECKSUM
-                        ([name]
-                              , [sys].[all_objects].[object_id]
-                              , [principal_id]
-                              , [schema_id]
-                              , [parent_object_id]
-                              , [type]
-                              , [type_desc]
-                              , [is_ms_shipped]
-                              , [is_published]
-                              , [is_schema_published]
-                              , [definition])) as TriggersChecksum
-                        FROM[sys].[all_objects]
-                        INNER JOIN[sys].[sql_modules]
-                        ON[sys].[sql_modules].[object_id] = [sys].[all_objects].[object_id]
-                        WHERE type = 'TR'";
-
-            return CheckSumHelper(query);
-        }
-
-        public int GetIndexesChecksum()
-        {
-            var query = @"SELECT
-                        CHECKSUM_AGG(CHECKSUM
-                        ([CONSTRAINT_CATALOG]
-                          ,[CONSTRAINT_SCHEMA]
-                          ,[CONSTRAINT_NAME]
-                          ,[TABLE_CATALOG]
-                          ,[TABLE_SCHEMA]
-                          ,[TABLE_NAME]
-                          ,[CONSTRAINT_TYPE]
-                          ,[IS_DEFERRABLE]
-                          ,[INITIALLY_DEFERRED])) as IndexesChecksum
-                        FROM [INFORMATION_SCHEMA].[TABLE_CONSTRAINTS]";
-
-            return CheckSumHelper(query);
-        }
-
-        private int CheckSumHelper(string query)
-        {
-            var result = 0;
-            //sqlconn.Open();
-            var data = ExecuteCommand(query);
-            
-            using (data)
-            {
-                data.Read();
-                if(!data.IsDBNull(0))
-                    result = data. GetInt32(0);
-            }
-            //sqlconn.Close();
-            return result;
-        }
-
-        private string CheckSumHelper2(string query)
-        {
-            var result = 0;
-            //sqlconn.Open();
-            var data = ExecuteCommand(query);
-
-            var sha = SHA256.Create();
-            var memStream = new MemoryStream();
-
-            using (data)
-            {
-                while(data.Read())
-                {
-                    using (var dbStream = data.GetStream(0))
-                    {
-                        dbStream.CopyTo(memStream);
-                    }
-                }
-            }
-
-            var hash = sha.ComputeHash(memStream.ToArray());
-
-            //sqlconn.Close();
-            return System.Text.Encoding.UTF8.GetString(hash).Replace("'", "");
-        }
-
-
 
         public void Dispose()
         {

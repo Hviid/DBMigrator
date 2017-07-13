@@ -10,10 +10,6 @@ namespace DBMigrator.Model
         public int ID { get; set; }
         public string Name { get { return Version.ToString(); } }
         public Version Version { get; }
-        public string TriggerChecksum { get; set; }
-        public string FunctionsChecksum { get; set; }
-        public string StoredProceduresChecksum { get; set; }
-        public string TablesViewsAndColumnsChecksum { get; set; }
         private List<Feature> _features { get; } = new List<Feature>();
         public IReadOnlyCollection<Feature> Features {
             get { return _features.AsReadOnly(); }
@@ -50,5 +46,7 @@ namespace DBMigrator.Model
         {
             return Version.CompareTo(obj.Version);
         }
+
+
     }
 }

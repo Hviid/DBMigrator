@@ -63,6 +63,11 @@ namespace DBMigrator.Console
                 "Runs command without required user interaction",
                 CommandOptionType.NoValue);
 
+            CommandOption noValidationArg = commandLineApplication.Option(
+                "--novalidation",
+                "Runs command without Database validation first",
+                CommandOptionType.NoValue);
+
             IServiceCollection serviceCollection = new ServiceCollection();
             Bootstrapper.ConfigureServices(serviceCollection);
 
@@ -86,11 +91,17 @@ namespace DBMigrator.Console
                 switch (commandArg.Value)
                 {
                     case "upgrade":
-                        ValidateDatabase(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
+                        if (!noValidationArg.HasValue())
+                        {
+                            ValidateDatabase(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
+                        }
                         Upgrade(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
                         break;
                     case "downgrade":
-                        ValidateDatabase(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
+                        if (!noValidationArg.HasValue())
+                        {
+                            ValidateDatabase(serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
+                        }
                         Rollback(versionArg.Value(), serveraddressArg.Value(), databasenameArg.Value(), usernameArg.Value(), passwordArg.Value(), migrationDirectory, noPromptArg.HasValue());
                         break;
                     case "validatedatabase":
@@ -138,7 +149,7 @@ namespace DBMigrator.Console
                 var i = 0;
 
                 void callback(object args){
-                    System.Console.Write("\r{0}%", i++);
+                    System.Console.Write("\r{0} secs", i++);
                 }
 
                 var timer = new Timer(callback, null, 0, 1000);

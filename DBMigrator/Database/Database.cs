@@ -51,6 +51,7 @@ namespace DBMigrator
             try
             {
                 reader = ExecuteCommand(MigratorModelScripts.SelectDBVersionScriptsScript);
+                ExecuteSingleCommand(MigratorModelScripts.TestModelAndUpgrade);
             }
             catch (Exception ex)
             {

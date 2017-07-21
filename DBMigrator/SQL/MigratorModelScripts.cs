@@ -73,5 +73,17 @@ namespace DBMigrator.SQL
         {
             return $"DELETE FROM DBVersionScripts WHERE Script = '{rollbackFileName}'";
         }
+
+        public static string TestModelAndUpgrade
+        {
+            get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'NO') " +
+                "BEGIN " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varchar(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varchar(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varchar(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseStoredProceduresChecksum varchar(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseIndexesChecksum varchar(max) NULL " +
+                "END";
+        }
     }
 }

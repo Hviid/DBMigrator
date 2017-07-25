@@ -76,13 +76,27 @@ namespace DBMigrator.SQL
 
         public static string TestModelAndUpgrade
         {
-            get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'NO') " +
+            get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'YES') " +
                 "BEGIN " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varchar(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varchar(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varchar(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseStoredProceduresChecksum varchar(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseIndexesChecksum varchar(max) NULL " +
+                    "UPDATE TABLE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL" +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseStoredProceduresChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseIndexesChecksum varbinary(max) NULL " +
+                "END";
+        }
+
+        public static string TestModelAndUpgrade2
+        {
+            get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'YES') " +
+                "BEGIN " +
+                    "UPDATE TABLE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL" +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseStoredProceduresChecksum varbinary(max) NULL " +
+                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseIndexesChecksum varbinary(max) NULL " +
                 "END";
         }
     }

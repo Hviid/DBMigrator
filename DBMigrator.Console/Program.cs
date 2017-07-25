@@ -143,7 +143,7 @@ namespace DBMigrator.Console
             var diff = differ.Diff(dbfolder.GetVersions(toVersion), dbVersions);
             if(diff.Count > 0)
             {
-                var diffText = differ.DiffText(diff);
+                var diffText = differ.UpgradeDiffText(diff);
                 _logger.LogInformation(diffText);
                 if (!noPrompt)
                 {
@@ -182,7 +182,7 @@ namespace DBMigrator.Console
             if (diff1.Count > 0)
             {
                 dbfolder1.AddRollbacks(diff1);
-                var diffText1 = differ1.DiffText(diff1);
+                var diffText1 = differ1.DowngradeDiffText(diff1);
                 _logger.LogInformation(diffText1);
                 if (!noPrompt)
                 {

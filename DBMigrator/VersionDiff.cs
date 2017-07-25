@@ -11,7 +11,7 @@ namespace DBMigrator
         {
         }
 
-        public string DiffText(List<DBVersion> diff)
+        public string UpgradeDiffText(List<DBVersion> diff)
         {
             var str = "";
             foreach (var version in diff)
@@ -24,6 +24,25 @@ namespace DBMigrator
                     foreach (var script in feature.UpgradeScripts)
                     {
                         str += $"----script: {script.FileName} \n";
+                    }
+                }
+            }
+            return str;
+        }
+
+        public string DowngradeDiffText(List<DBVersion> diff)
+        {
+            var str = "";
+            foreach (var version in diff)
+            {
+                str += $"version: {version.Name} \n";
+                foreach (var feature in version.Features)
+                {
+                    str += $"--feature: {feature.Name} \n";
+                    str += $"---Rollbacks: \n";
+                    foreach (var script in feature.UpgradeScripts)
+                    {
+                        str += $"----script: {script.RollbackScript.FileName} \n";
                     }
                 }
             }

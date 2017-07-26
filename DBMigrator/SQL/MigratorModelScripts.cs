@@ -78,7 +78,7 @@ namespace DBMigrator.SQL
         {
             get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'YES') " +
                 "BEGIN " +
-                    "UPDATE TABLE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL" +
+                    "UPDATE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL " +
                     "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varbinary(max) NULL " +
                     "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varbinary(max) NULL " +
                     "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varbinary(max) NULL " +
@@ -91,7 +91,7 @@ namespace DBMigrator.SQL
         {
             get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'YES') " +
                 "BEGIN " +
-                    "UPDATE TABLE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL" +
+                    "UPDATE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL " +
                     "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varbinary(max) NULL " +
                     "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varbinary(max) NULL " +
                     "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varbinary(max) NULL " +

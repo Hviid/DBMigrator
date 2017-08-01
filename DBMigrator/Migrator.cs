@@ -7,6 +7,8 @@ using DBMigrator.Model;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
+using DBMigrator.SQL;
 
 namespace DBMigrator
 {
@@ -37,16 +39,11 @@ namespace DBMigrator
                 foreach (var rollbackToVersion in versionsToRollback)
                 {
                 _logger.Log($"Downgrading to version {rollbackToVersion.Name}");
-                
-
-                    _database.UpdateDatabaseVersion(rollbackToVersion);
 
                     foreach (var featureToRollback in rollbackToVersion.Features)
                     {
                         DowngradeFeature(featureToRollback);
                     }
-
-                    _database.UpdateLog(rollbackToVersion);
 
                     //throw "test"
                     _database.CommitTransaction();
@@ -73,15 +70,11 @@ namespace DBMigrator
                 foreach (var upgradeToVersion in versionsToUpgrade)
                 {
                     _logger.Log($"--Upgrading to version {upgradeToVersion.Name}");
-
-                    _database.UpdateDatabaseVersion(upgradeToVersion);
-
+                    
                     foreach (var featureToUpgrade in upgradeToVersion.Features)
                     {
                         UpgradeFeature(featureToUpgrade);
                     }
-
-                    _database.UpdateLog(upgradeToVersion);
                 }
                 //throw "test"
                 _database.CommitTransaction();
@@ -99,7 +92,7 @@ namespace DBMigrator
             foreach (var script in feature.RollbackScripts)
             {
                 _logger.Log($"--------Running script: {script.FileName}");
-                _database.DowngradeShema(script);
+                DowngradeWithFile(script);
             }
         }
 
@@ -109,14 +102,37 @@ namespace DBMigrator
             foreach (var script in feature.UpgradeScripts)
             {
                 _logger.Log($"--------Running script: {script.FileName}");
-                _database.UpgradeSchema(script);
+                UpgradeWithFile(script);
             }
+        }
 
-            foreach (var script in feature.FuncsSPsViewsTriggersScripts)
-            {
-                _logger.Log($"--------Running script: {script.FileName}");
-                _database.UpgradeFuncViewStoredProcedureTrigger(script);
-            }
+        private void UpgradeWithFile(UpgradeScript script)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            _database.ExecuteSingleCommand(script.SQL);
+            sw.Stop();
+            script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
+
+            _database.ExecuteSingleCommand(MigratorModelScripts.GetInsertDBVersionScript(
+                script.Feature.Version.Name,
+                script.Order,
+                script.Feature.Name,
+                script.FileName,
+                script.Checksum,
+                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.TriggersChecksum)})",
+                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.TablesViewsAndColumnsChecksumScript)})",
+                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.FunctionsChecksum)})",
+                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.StoredProceduresChecksum)})",
+                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum)})",
+                script.ExecutionTime.Value
+            ));
+        }
+
+        private void DowngradeWithFile(DowngradeScript script)
+        {
+            _database.ExecuteSingleCommand(script.SQL);
+            _database.ExecuteSingleCommand(MigratorModelScripts.GetDeleteDBVersionScript(script.FileName.Replace("_rollback_", "_")));
         }
 
         public void Dispose()

@@ -15,9 +15,9 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Versions_noversions_test()
         {
-            var database = new Database("");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            database.GetDBState();
             database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
-            database.ExecuteSingleCommand("DELETE FROM DBVersion");
             var versions = database.GetDBState();
 
             Assert.AreEqual(0, versions.Count);
@@ -29,15 +29,15 @@ namespace DBMigrator.Test
             var version = new DBVersion("1.0.0");
             var script = version.AddAndOrGetFeature("Feature").AddUpgradeScript("01_test.sql", 1);
             script.Checksum = "A";
-            script.SQL = "SELECT * FROM DBVersion";
+            script.SQL = "SELECT * FROM DBVersionScripts";
 
 
-            var database = new Database("");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            database.GetDBState();
             database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
-            database.ExecuteSingleCommand("DELETE FROM DBVersion");
 
-            //database.DatabaseSchema.UpdateDatabaseVersion(version);
-            database.UpgradeSchema(script);
+            var migrator = new Migrator(database, null);
+            migrator.Upgrade(new List<DBVersion>{ version });
 
             var versions = database.GetDBState();
 
@@ -47,7 +47,7 @@ namespace DBMigrator.Test
             var dbScript = versions.First().Features.First().UpgradeScripts.First();
             Assert.AreEqual(1, dbScript.Order);
             Assert.AreEqual("A", dbScript.Checksum);
-            Assert.IsTrue(dbScript.ExecutionTime > 0);
+            Assert.AreNotEqual(dbScript.ExecutionTime, null);
         }
     }
 }

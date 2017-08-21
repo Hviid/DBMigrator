@@ -78,17 +78,17 @@ namespace DBMigrator.SQL
         {
             get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' " +
                 "AND DATA_TYPE = 'varchar') " +
-                "BEGIN" +
-                "alter table DBVersionScripts drop column DatabaseTriggersChecksum" +
-                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseTablesAndViewsChecksum" +
-                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseFunctionsChecksum" +
-                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseStoredProceduresChecksum" +
-                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseIndexesChecksum" +
-                "ALTER TABLE DBVersionScripts add DatabaseTriggersChecksum varbinary(max) NULL" +
-                "ALTER TABLE DBVersionScripts add DatabaseTablesAndViewsChecksum varbinary(max) NULL" +
-                "ALTER TABLE DBVersionScripts add DatabaseFunctionsChecksum varbinary(max) NULL" +
-                "ALTER TABLE DBVersionScripts add DatabaseStoredProceduresChecksum varbinary(max) NULL" +
-                "ALTER TABLE DBVersionScripts add DatabaseIndexesChecksum varbinary(max) NULL" +
+                "BEGIN " +
+                "alter table DBVersionScripts drop column DatabaseTriggersChecksum " +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseTablesAndViewsChecksum " +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseFunctionsChecksum " +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseStoredProceduresChecksum " +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseIndexesChecksum " +
+                "ALTER TABLE DBVersionScripts add DatabaseTriggersChecksum varbinary(max) NULL " +
+                "ALTER TABLE DBVersionScripts add DatabaseTablesAndViewsChecksum varbinary(max) NULL " +
+                "ALTER TABLE DBVersionScripts add DatabaseFunctionsChecksum varbinary(max) NULL " +
+                "ALTER TABLE DBVersionScripts add DatabaseStoredProceduresChecksum varbinary(max) NULL " +
+                "ALTER TABLE DBVersionScripts add DatabaseIndexesChecksum varbinary(max) NULL " +
                 "END";
         }
         

@@ -76,28 +76,21 @@ namespace DBMigrator.SQL
 
         public static string TestModelAndUpgrade
         {
-            get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'YES') " +
-                "BEGIN " +
-                    "UPDATE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseStoredProceduresChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseIndexesChecksum varbinary(max) NULL " +
+            get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' " +
+                "AND DATA_TYPE = 'varchar') " +
+                "BEGIN" +
+                "alter table DBVersionScripts drop column DatabaseTriggersChecksum" +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseTablesAndViewsChecksum" +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseFunctionsChecksum" +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseStoredProceduresChecksum" +
+                "ALTER TABLE DBVersionScripts drop COLUMN DatabaseIndexesChecksum" +
+                "ALTER TABLE DBVersionScripts add DatabaseTriggersChecksum varbinary(max) NULL" +
+                "ALTER TABLE DBVersionScripts add DatabaseTablesAndViewsChecksum varbinary(max) NULL" +
+                "ALTER TABLE DBVersionScripts add DatabaseFunctionsChecksum varbinary(max) NULL" +
+                "ALTER TABLE DBVersionScripts add DatabaseStoredProceduresChecksum varbinary(max) NULL" +
+                "ALTER TABLE DBVersionScripts add DatabaseIndexesChecksum varbinary(max) NULL" +
                 "END";
         }
-
-        public static string TestModelAndUpgrade2
-        {
-            get => "IF EXISTS(SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DBVersionScripts' AND COLUMN_NAME = 'DatabaseTriggersChecksum' AND DATA_TYPE = 'varchar' AND IS_NULLABLE = 'YES') " +
-                "BEGIN " +
-                    "UPDATE DBVersionScripts SET DatabaseTriggersChecksum = NULL, DatabaseTablesAndViewsChecksum = NULL, DatabaseFunctionsChecksum = NULL, DatabaseStoredProceduresChecksum = NULL, DatabaseIndexesChecksum = NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTriggersChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseTablesAndViewsChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseFunctionsChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseStoredProceduresChecksum varbinary(max) NULL " +
-                    "ALTER TABLE DBVersionScripts ALTER COLUMN DatabaseIndexesChecksum varbinary(max) NULL " +
-                "END";
-        }
+        
     }
 }

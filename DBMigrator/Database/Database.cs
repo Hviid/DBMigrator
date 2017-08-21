@@ -50,9 +50,8 @@ namespace DBMigrator
             var result = new List<DBVersion>();
             try
             {
-                reader = ExecuteCommand(MigratorModelScripts.SelectDBVersionScriptsScript);
                 ExecuteSingleCommand(MigratorModelScripts.TestModelAndUpgrade);
-                ExecuteSingleCommand(MigratorModelScripts.TestModelAndUpgrade2);
+                reader = ExecuteCommand(MigratorModelScripts.SelectDBVersionScriptsScript);
             }
             catch (Exception ex)
             {

@@ -106,11 +106,11 @@ namespace DBMigrator
             if (!data.Read())
                 return (null, null, null, null, null);
 
-            var databaseTriggersChecksum = (byte [])data.GetValue(0);
-            var DatabaseTablesAndViewsChecksum = (byte[])data.GetValue(1);
-            var DatabaseFunctionsChecksum = (byte[])data.GetValue(2);
-            var DatabaseStoredProceduresChecksum = (byte[])data.GetValue(3);
-            var DatabaseIndexesChecksum = (byte[])data.GetValue(4);
+            var databaseTriggersChecksum = data.GetValue(0).GetType() == typeof(DBNull) ? null: (byte[])data.GetValue(0);
+            var DatabaseTablesAndViewsChecksum = data.GetValue(1).GetType() == typeof(DBNull) ? null : (byte[])data.GetValue(1);
+            var DatabaseFunctionsChecksum = data.GetValue(2).GetType() == typeof(DBNull) ? null : (byte[])data.GetValue(2);
+            var DatabaseStoredProceduresChecksum = data.GetValue(3).GetType() == typeof(DBNull) ? null : (byte[])data.GetValue(3);
+            var DatabaseIndexesChecksum = data.GetValue(4).GetType() == typeof(DBNull) ? null : (byte[])data.GetValue(4);
 
             Sqlconn.Close();
             return (databaseTriggersChecksum, DatabaseTablesAndViewsChecksum, DatabaseFunctionsChecksum, DatabaseStoredProceduresChecksum, DatabaseIndexesChecksum);

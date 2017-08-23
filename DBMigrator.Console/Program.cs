@@ -158,7 +158,7 @@ namespace DBMigrator.Console
                 }
 
                 var timer = new Timer(callback, null, 0, 1000);
-                await Task.Run(() => migrator.Upgrade(diff));
+                migrator.Upgrade(diff);
                 timer.Dispose();
 
                 if (!noPrompt)

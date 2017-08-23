@@ -24,16 +24,21 @@ namespace DBMigrator
 
             var current = _database.GetDatabaseCurrentChecksums();
 
-            if (latest.DatabaseFunctionsChecksum != current.DatabaseFunctionsChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseFunctionsChecksum} does not match latest migration checksum {latest.DatabaseFunctionsChecksum}");
-            if (latest.DatabaseIndexesChecksum != current.DatabaseIndexesChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseIndexesChecksum} does not match latest migration checksum {latest.DatabaseIndexesChecksum}");
-            if (latest.DatabaseStoredProceduresChecksum != current.DatabaseStoredProceduresChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseStoredProceduresChecksum} does not match latest migration checksum {latest.DatabaseStoredProceduresChecksum}");
-            if (latest.DatabaseTablesAndViewsChecksum != current.DatabaseTablesAndViewsChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.DatabaseTablesAndViewsChecksum} does not match latest migration checksum {latest.DatabaseTablesAndViewsChecksum}");
-            if (latest.databaseTriggersChecksum != current.databaseTriggersChecksum)
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {current.databaseTriggersChecksum} does not match latest migration checksum {latest.databaseTriggersChecksum}");
+            if (!ByteArraysEqual(latest.DatabaseFunctionsChecksum, current.DatabaseFunctionsChecksum ))
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {System.Text.Encoding.UTF8.GetString(current.DatabaseFunctionsChecksum)} does not match latest migration checksum {System.Text.Encoding.UTF8.GetString(latest.DatabaseFunctionsChecksum)}");
+            if (!ByteArraysEqual(latest.DatabaseIndexesChecksum, current.DatabaseIndexesChecksum))
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {System.Text.Encoding.UTF8.GetString(current.DatabaseIndexesChecksum)} does not match latest migration checksum {System.Text.Encoding.UTF8.GetString(latest.DatabaseIndexesChecksum)}");
+            if (!ByteArraysEqual(latest.DatabaseStoredProceduresChecksum, current.DatabaseStoredProceduresChecksum))
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {System.Text.Encoding.UTF8.GetString(current.DatabaseStoredProceduresChecksum)} does not match latest migration checksum {System.Text.Encoding.UTF8.GetString(latest.DatabaseStoredProceduresChecksum)}");
+            if (!ByteArraysEqual(latest.DatabaseTablesAndViewsChecksum, current.DatabaseTablesAndViewsChecksum))
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {System.Text.Encoding.UTF8.GetString(current.DatabaseTablesAndViewsChecksum)} does not match latest migration checksum {System.Text.Encoding.UTF8.GetString(latest.DatabaseTablesAndViewsChecksum)}");
+            if (!ByteArraysEqual(latest.databaseTriggersChecksum, current.databaseTriggersChecksum))
+                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {System.Text.Encoding.UTF8.GetString(current.databaseTriggersChecksum)} does not match latest migration checksum {System.Text.Encoding.UTF8.GetString(latest.databaseTriggersChecksum)}");
+        }
+        private bool ByteArraysEqual(byte[] array1, byte[] array2)
+        {
+            return array1 == null && array2 == null || array1 != null && array2 != null && array1.SequenceEqual(array2);
+            
         }
     }
 }

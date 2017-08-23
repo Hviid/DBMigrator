@@ -120,8 +120,9 @@ namespace DBMigrator.Console
                             break;
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _logger.LogCritical(ex.Message);
                     return 1;
                 }
 
@@ -144,7 +145,7 @@ namespace DBMigrator.Console
             //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
-        private static async void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
+        private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
             var dbfolder = new DBFolder(migrationsDir);
             _logger.LogDebug($"Reading from {migrationsDir.FullName}");

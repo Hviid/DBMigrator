@@ -82,7 +82,7 @@ namespace DBMigrator
             } catch(Exception ex) {
                 _logger.Log(ex.Message);
                 _database.RollbackTransaction();
-                throw;
+                throw ex;
             }
 
             _database.Close();

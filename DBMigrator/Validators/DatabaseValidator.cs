@@ -25,13 +25,13 @@ namespace DBMigrator
             if (!ByteArraysEqual(latest.DatabaseFunctionsChecksum, current.DatabaseFunctionsChecksum ))
                 throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {ConvertByteArrayToString(current.DatabaseFunctionsChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.DatabaseFunctionsChecksum)}");
             if (!ByteArraysEqual(latest.DatabaseIndexesChecksum, current.DatabaseIndexesChecksum))
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {ConvertByteArrayToString(current.DatabaseIndexesChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.DatabaseIndexesChecksum)}");
+                throw new Exception($"DatabaseIndexesChecksum exception current database checksum {ConvertByteArrayToString(current.DatabaseIndexesChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.DatabaseIndexesChecksum)}");
             if (!ByteArraysEqual(latest.DatabaseStoredProceduresChecksum, current.DatabaseStoredProceduresChecksum))
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {ConvertByteArrayToString(current.DatabaseStoredProceduresChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.DatabaseStoredProceduresChecksum)}");
+                throw new Exception($"DatabaseStoredProceduresChecksum exception current database checksum {ConvertByteArrayToString(current.DatabaseStoredProceduresChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.DatabaseStoredProceduresChecksum)}");
             if (!ByteArraysEqual(latest.DatabaseTablesAndViewsChecksum, current.DatabaseTablesAndViewsChecksum))
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {ConvertByteArrayToString(current.DatabaseTablesAndViewsChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.DatabaseTablesAndViewsChecksum)}");
+                throw new Exception($"DatabaseTablesAndViewsChecksum exception current database checksum {ConvertByteArrayToString(current.DatabaseTablesAndViewsChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.DatabaseTablesAndViewsChecksum)}");
             if (!ByteArraysEqual(latest.databaseTriggersChecksum, current.databaseTriggersChecksum))
-                throw new Exception($"DatabaseFunctionsChecksum exception current database checksum {ConvertByteArrayToString(current.databaseTriggersChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.databaseTriggersChecksum)}");
+                throw new Exception($"databaseTriggersChecksum exception current database checksum {ConvertByteArrayToString(current.databaseTriggersChecksum)} does not match latest migration checksum {ConvertByteArrayToString(latest.databaseTriggersChecksum)}");
         }
         private bool ByteArraysEqual(byte[] array1, byte[] array2)
         {

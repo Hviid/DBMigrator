@@ -51,6 +51,7 @@ namespace DBMigrator
             } catch (Exception ex) {
                 _logger.Log(ex.Message);
                 _database.RollbackTransaction();
+                throw;
             }
 
             _database.Close();
@@ -81,6 +82,7 @@ namespace DBMigrator
             } catch(Exception ex) {
                 _logger.Log(ex.Message);
                 _database.RollbackTransaction();
+                throw ex;
             }
 
             _database.Close();

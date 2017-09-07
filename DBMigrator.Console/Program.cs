@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading;
+using System;
 
 namespace DBMigrator.Console
 {
@@ -14,7 +15,7 @@ namespace DBMigrator.Console
     {
         private static ILogger _logger;
 
-        public static void Main(string[] args)
+        public static int Main(string[] args)
         {
             CommandLineApplication commandLineApplication = new CommandLineApplication(throwOnUnexpectedArg: false);
             commandLineApplication.HelpOption("-? | -h | --help");
@@ -93,37 +94,48 @@ namespace DBMigrator.Console
                 var password = passwordArg.Value();
                 var databasename = databasenameArg.Value();
                 var database = new Database(servername, databasename, username, password);
-                
-                switch (commandArg.Value)
+
+                try
                 {
-                    case "upgrade":
-                        if (!noValidationArg.HasValue())
-                        {
+                    switch (commandArg.Value)
+                    {
+                        case "upgrade":
+                            if (!noValidationArg.HasValue())
+                            {
+                                ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
+                            }
+                            Upgrade(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
+                            break;
+                        case "downgrade":
+                            if (!noValidationArg.HasValue())
+                            {
+                                ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
+                            }
+                            Rollback(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
+                            break;
+                        case "validatedatabase":
                             ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
-                        }
-                        Upgrade(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
-                        break;
-                    case "downgrade":
-                        if (!noValidationArg.HasValue())
-                        {
-                            ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
-                        }
-                        Rollback(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
-                        break;
-                    case "validatedatabase":
-                        ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
-                        break;
-                    default:
-                        break;
+                            break;
+                        default:
+                            break;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogCritical(ex.Message);
+                    return 1;
+                }
+
                 if (!noPromptArg.HasValue())
                 {
                     _logger.LogInformation("Press any key to exit.");
                     System.Console.ReadKey();
                 }
+
                 return 0;
             });
-            commandLineApplication.Execute(args);
+            var temp = commandLineApplication.Execute(args);
+            return temp;
         }
 
         public static DirectoryInfo GetExecutingDir()
@@ -133,7 +145,7 @@ namespace DBMigrator.Console
             //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
-        private static async void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
+        private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
             var dbfolder = new DBFolder(migrationsDir);
             _logger.LogDebug($"Reading from {migrationsDir.FullName}");

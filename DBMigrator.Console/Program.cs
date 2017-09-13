@@ -72,8 +72,8 @@ namespace DBMigrator.Console
             IServiceCollection serviceCollection = new ServiceCollection();
             Bootstrapper.ConfigureServices(serviceCollection);
 
-            var test = serviceCollection.BuildServiceProvider();
-            var loggerFactory = test.GetRequiredService<ILoggerFactory>();
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+            var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
             _logger = loggerFactory.CreateLogger<Program>();
 
             DirectoryInfo migrationDirectory;
@@ -122,7 +122,7 @@ namespace DBMigrator.Console
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogCritical(ex.Message);
+                    _logger.LogCritical(ex, ex.Message);
                     return 1;
                 }
 

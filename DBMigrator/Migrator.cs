@@ -16,13 +16,14 @@ namespace DBMigrator
     {
         private Database _database;
         private DBFolder _dBFolder;
-        private Logger _logger;
+        private readonly ILogger<Migrator> _logger;
         
         public Migrator(Database database, DBFolder dbFolder)
         {
             _database = database;
             _dBFolder = dbFolder;
-            _logger = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<Logger>();
+            var loggerFactory = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<ILoggerFactory>();
+            _logger = loggerFactory.CreateLogger<Migrator>();
         }
 
         public void Rollback(List<DBVersion> versionsToRollback)
@@ -31,14 +32,14 @@ namespace DBMigrator
 
             if (versionsToRollback.Count() == 0)
             {
-                _logger.Log("No downgrades found");
+                _logger.LogInformation("No downgrades found");
             }
 
             try
             {
                 foreach (var rollbackToVersion in versionsToRollback)
                 {
-                _logger.Log($"Downgrading to version {rollbackToVersion.Name}");
+                _logger.LogInformation($"Downgrading to version {rollbackToVersion.Name}");
 
                     foreach (var featureToRollback in rollbackToVersion.Features)
                     {
@@ -49,7 +50,7 @@ namespace DBMigrator
                     _database.CommitTransaction();
                 }
             } catch (Exception ex) {
-                _logger.Log(ex.Message);
+                _logger.LogError(ex, ex.Message);
                 _database.RollbackTransaction();
                 throw;
             }
@@ -63,47 +64,46 @@ namespace DBMigrator
 
             if(versionsToUpgrade.Count() == 0)
             {
-                _logger.Log("No upgrades found");
+                _logger.LogInformation("No upgrades found");
                 return;
             }
             
             try {
                 foreach (var upgradeToVersion in versionsToUpgrade)
                 {
-                    _logger.Log($"--Upgrading to version {upgradeToVersion.Name}");
+                    _logger.LogInformation($"--Upgrading to version {upgradeToVersion.Name}");
                     
                     foreach (var featureToUpgrade in upgradeToVersion.Features)
                     {
                         UpgradeFeature(featureToUpgrade);
                     }
                 }
-                //throw "test"
+                throw new Exception("test");
                 _database.CommitTransaction();
             } catch(Exception ex) {
-                _logger.Log(ex.Message);
+                _logger.LogError(ex, ex.Message);
                 _database.RollbackTransaction();
                 throw ex;
             }
-
             _database.Close();
         }
 
         private void DowngradeFeature(Feature feature){
-            _logger.Log($"Downgrading database feature {feature.Name}");
+            _logger.LogInformation($"Downgrading database feature {feature.Name}");
 
             foreach (var script in feature.RollbackScripts)
             {
-                _logger.Log($"--------Running script: {script.FileName}");
+                _logger.LogInformation($"--------Running script: {script.FileName}");
                 DowngradeWithFile(script);
             }
         }
 
         private void UpgradeFeature(Feature feature){
-            _logger.Log($"----Upgrading database with feature: {feature.Name}");
+            _logger.LogInformation($"----Upgrading database with feature: {feature.Name}");
             
             foreach (var script in feature.UpgradeScripts)
             {
-                _logger.Log($"--------Running script: {script.FileName}");
+                _logger.LogInformation($"--------Running script: {script.FileName}");
                 UpgradeWithFile(script);
             }
         }
@@ -112,23 +112,43 @@ namespace DBMigrator
         {
             var sw = new Stopwatch();
             sw.Start();
-            _database.ExecuteSingleCommand(script.SQL);
+            try
+            {
+                _database.ExecuteSingleCommand(script.SQL);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to run script '{script}' on database", script.FileName);
+                throw;
+            }
             sw.Stop();
             script.ExecutionTime = Convert.ToInt32(sw.ElapsedMilliseconds);
 
-            _database.ExecuteSingleCommand(MigratorModelScripts.GetInsertDBVersionScript(
-                script.Feature.Version.Name,
-                script.Order,
-                script.Feature.Name,
-                script.FileName,
-                script.Checksum,
-                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.TriggersChecksum)})",
-                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.TablesViewsAndColumnsChecksumScript)})",
-                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.FunctionsChecksum)})",
-                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.StoredProceduresChecksum)})",
-                $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum)})",
-                script.ExecutionTime.Value
-            ));
+            try {
+                var cmd = MigratorModelScripts.GetInsertDBVersionScript(
+                    script.Feature.Version.Name,
+                    script.Order,
+                    script.Feature.Name,
+                    script.FileName,
+                    script.Checksum,
+                    $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.TriggersChecksum)})",
+                    $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.TablesViewsAndColumnsChecksumScript)})",
+                    $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.FunctionsChecksum)})",
+                    $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.StoredProceduresChecksum)})",
+                    $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum)})",
+                    script.ExecutionTime.Value
+                );
+                _logger.LogInformation("Start");
+                _logger.LogInformation(cmd);
+                _logger.LogInformation("End");
+
+                _database.ExecuteSingleCommand(cmd);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update database with entry for script '{script}'", script.FileName);
+                throw;
+            }
         }
 
         private void DowngradeWithFile(DowngradeScript script)

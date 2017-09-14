@@ -78,7 +78,7 @@ namespace DBMigrator
                         UpgradeFeature(featureToUpgrade);
                     }
                 }
-                throw new Exception("test");
+                //throw new Exception("test");
                 _database.CommitTransaction();
             } catch(Exception ex) {
                 _logger.LogError(ex, ex.Message);
@@ -138,9 +138,6 @@ namespace DBMigrator
                     $"({ChecksumScripts.GetHashbytesFor(ChecksumScripts.IndexesChecksum)})",
                     script.ExecutionTime.Value
                 );
-                _logger.LogInformation("Start");
-                _logger.LogInformation(cmd);
-                _logger.LogInformation("End");
 
                 _database.ExecuteSingleCommand(cmd);
             }

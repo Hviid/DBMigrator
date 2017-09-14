@@ -98,31 +98,37 @@ namespace DBMigrator.SQL
         //http://www.bidn.com/blogs/TomLannen/bidn-blog/2265/using-hashbytes-to-compare-columns
         public static string GetHashbytesFor(string query)
         {
-            return $@"SELECT DBMIGRATOR_BIG_HASHBYTES(({query} FOR XML AUTO))";
+            return $@"SELECT dbo.DBMIGRATOR_BIG_HASHBYTES(({query} FOR XML AUTO))";
         }
 
-        public static string CustomHashbytesFunction
+        public static string DropCustomHasbytesFunction
+        {
+            get => "IF EXISTS (SELECT * FROM dbo.sysobjects WHERE id = OBJECT_ID(N'[dbo].[DBMIGRATOR_BIG_HASHBYTES]') AND OBJECTPROPERTY(id, N'IsScalarFunction') = 1 ) " +
+                "DROP FUNCTION DBMIGRATOR_BIG_HASHBYTES";
+        }
+
+        public static string CreateCustomHashbytesFunction
         {
             get => "CREATE FUNCTION DBMIGRATOR_BIG_HASHBYTES " +
-                "(" +
-                    "@string varchar(max)" +
-                ")" +
-                "RETURNS varbinary(max)" +
-                "AS" +
-                "BEGIN" +
-                    "DECLARE @size int = (SELECT DATALENGTH(@string))" +
-                    "DECLARE @taken int = 0" +
-                    "DECLARE @strToConvert varchar(max)" +
-                    "DECLARE @chunkSize int = 4000" +
-                    "DECLARE @result varbinary(max)" +
-                    "WHILE @size > @taken" +
-                    "BEGIN" +
-                        "SET @strToConvert = (SELECT SUBSTRING(@string, @taken, @chunkSize))" +
-                        "SET @result = (SELECT HASHBYTES('sha1', CONCAT(@strToConvert, CONVERT(varchar(max), @result))))" +
-                        "SET @taken = @taken + @chunkSize" +
-                    "END" +
-                    "RETURN @result" +
-                "END";
+                    "( " +
+                        "@string varchar(max) " +
+                    ") " +
+                    "RETURNS varbinary(max) " +
+                    "AS " +
+                    "BEGIN " +
+                        "DECLARE @size int = (SELECT DATALENGTH(@string)) " +
+                        "DECLARE @taken int = 0 " +
+                        "DECLARE @strToConvert varchar(max) " +
+                        "DECLARE @chunkSize int = 4000 " +
+                        "DECLARE @result varbinary(max) " +
+                        "WHILE @size > @taken " +
+                        "BEGIN " +
+                            "SET @strToConvert = (SELECT SUBSTRING(@string, @taken, @chunkSize)) " +
+                            "SET @result = (SELECT HASHBYTES('sha1', CONCAT(@strToConvert, CONVERT(varchar(max), @result)))) " +
+                            "SET @taken = @taken + @chunkSize " +
+                        "END " +
+                        "RETURN @result " +
+                    "END";
         }
     }
 }

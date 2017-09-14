@@ -49,6 +49,8 @@ namespace DBMigrator
         public List<DBVersion> GetDBState()
         {
             Sqlconn.Open();
+            ExecuteSingleCommand(ChecksumScripts.DropCustomHasbytesFunction);
+            ExecuteSingleCommand(ChecksumScripts.CreateCustomHashbytesFunction);
             SqlDataReader reader;
             var result = new List<DBVersion>();
             try

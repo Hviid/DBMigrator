@@ -24,7 +24,6 @@ namespace DBMigrator
                 .AddDebug();
 
             serviceCollection.AddSingleton<ILoggerFactory>(loggerFactory);
-            serviceCollection.AddSingleton<Logger>();
 
             _serviceCollection = serviceCollection;
         }

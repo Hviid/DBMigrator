@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Linq;
 using DBMigrator.SQL;
+using Microsoft.Extensions.Logging;
 
 namespace DBMigrator
 {
@@ -14,11 +15,14 @@ namespace DBMigrator
     {
         public SqlConnection Sqlconn;
         private SqlTransaction trans;
-        private Logger _logger;
+        private readonly ILogger<Database> _logger;
 
 
         public Database(string servername, string database, string username, string password)
         {
+            var loggerFactory = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<ILoggerFactory>();
+            _logger = loggerFactory.CreateLogger<Database>();
+
             string connectionString;
             if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
             {
@@ -33,19 +37,20 @@ namespace DBMigrator
 
         private void SetupConnAndLogger(string connectionString)
         {
-            _logger = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<Logger>();
             Sqlconn = new SqlConnection(connectionString);
         }
 
         private void CreateDBVersionTable()
         {
-            _logger.Log("Creating DBVersion table");
+            _logger.LogInformation("Creating DBVersion table");
             ExecuteSingleCommand(MigratorModelScripts.CreateDBVersionScriptsTable);
         }
 
         public List<DBVersion> GetDBState()
         {
             Sqlconn.Open();
+            ExecuteSingleCommand(ChecksumScripts.DropCustomHasbytesFunction);
+            ExecuteSingleCommand(ChecksumScripts.CreateCustomHashbytesFunction);
             SqlDataReader reader;
             var result = new List<DBVersion>();
             try
@@ -53,7 +58,7 @@ namespace DBMigrator
                 ExecuteSingleCommand(MigratorModelScripts.TestModelAndUpgrade);
                 reader = ExecuteCommand(MigratorModelScripts.SelectDBVersionScriptsScript);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Sqlconn.Close();
                 CreateDBVersionTable();

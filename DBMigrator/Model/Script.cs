@@ -9,8 +9,8 @@ namespace DBMigrator.Model
     public class Script
     {
         public const string ORDERED_FILENAME_REGEX = @"(\d+)_(\w+)";
-        public const string MIGRATIONS_UPGRADE_FILENAME_REGEX = @"(\d+)_(?!rollback)(\w+)";
-        public const string MIGRATIONS_ROLLBACK_FILENAME_REGEX = @"(\d+)_(rollback)(\w+)";
+        public const string MIGRATIONS_UPGRADE_FILENAME_REGEX = @"^(\d+)_(?!rollback)(\w+)";
+        public const string MIGRATIONS_ROLLBACK_FILENAME_REGEX = @"^(\d+)_(rollback)(\w+)";
         public const string CREATE_STORED_PROCEDURE_REGEX = @"CREATE\s+PROCEDURE\s+(\w+)";
         public const string CREATE_FUNCTIONS_REGEX = @"CREATE\s+FUNCTION\s+(\w+)";
         public const string CREATE_TRIGGERS_REGEX = @"CREATE\s+TRIGGER\s+(\w+)";

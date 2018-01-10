@@ -18,7 +18,7 @@ namespace DBMigrator
         private Database _database;
         private DBFolder _dBFolder;
         private readonly ILogger<Migrator> _logger;
-        private Regex _goRegex = new Regex(@"/[\n\r]GO[\n\r]/g");
+        private Regex _goRegex = new Regex(@"/[\n\r]GO[\n\r\s\;]/g");
 
         public Migrator(Database database, DBFolder dbFolder)
         {

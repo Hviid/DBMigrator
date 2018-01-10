@@ -172,20 +172,28 @@ namespace DBMigrator
             return (currentTriggersChecksum, currentTablesViewsAndColumnsChecksum, currentFunctionsChecksum, currentStoredProceduresChecksum, currentIndexesChecksum);
         }
 
-        public void ExecuteSingleCommand(string cmd)
+        public void ExecuteMultipleCommands(IEnumerable<string> cmds)
         {
             var alreadyOpen = Sqlconn.State == System.Data.ConnectionState.Open;
-            if(!alreadyOpen)
+            if (!alreadyOpen)
                 Sqlconn.Open();
             try
             {
-                using (ExecuteCommand(cmd)) { }
+                foreach (var cmd in cmds)
+                {
+                    using (ExecuteCommand(cmd)) { }
+                }
             }
             finally
             {
-                if(!alreadyOpen)
+                if (!alreadyOpen)
                     Sqlconn.Close();
             }
+        }
+
+        public void ExecuteSingleCommand(string cmd)
+        {
+            ExecuteMultipleCommands(new string[] { cmd });
         }
 
         public SqlDataReader ExecuteCommand(string cmd)

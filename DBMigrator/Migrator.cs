@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using DBMigrator.SQL;
+using System.Text.RegularExpressions;
 
 namespace DBMigrator
 {
@@ -17,7 +18,8 @@ namespace DBMigrator
         private Database _database;
         private DBFolder _dBFolder;
         private readonly ILogger<Migrator> _logger;
-        
+        private Regex _goRegex = new Regex(@"/[\n\r]GO[\n\r]/g");
+
         public Migrator(Database database, DBFolder dbFolder)
         {
             _database = database;
@@ -108,13 +110,18 @@ namespace DBMigrator
             }
         }
 
+        private IEnumerable<string> BatchByGoStatement(string sqltext)
+        {
+            return _goRegex.Split(sqltext);
+        }
+
         private void UpgradeWithFile(UpgradeScript script)
         {
             var sw = new Stopwatch();
             sw.Start();
             try
             {
-                _database.ExecuteSingleCommand(script.SQL);
+                _database.ExecuteMultipleCommands(BatchByGoStatement(script.SQL));
             }
             catch (Exception ex)
             {

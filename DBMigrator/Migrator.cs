@@ -18,7 +18,7 @@ namespace DBMigrator
         private Database _database;
         private DBFolder _dBFolder;
         private readonly ILogger<Migrator> _logger;
-        private Regex _goRegex = new Regex(@"/[\n\r]GO[\n\r\s\;]/g");
+        private Regex _goRegex = new Regex(@"[\n\r]GO\b");
 
         public Migrator(Database database, DBFolder dbFolder)
         {
@@ -112,7 +112,7 @@ namespace DBMigrator
 
         private IEnumerable<string> BatchByGoStatement(string sqltext)
         {
-            return _goRegex.Split(sqltext);
+            return _goRegex.Split(sqltext).Where(cmd => !string.IsNullOrWhiteSpace(cmd));
         }
 
         private void UpgradeWithFile(UpgradeScript script)

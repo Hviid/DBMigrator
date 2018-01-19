@@ -92,7 +92,7 @@ namespace DBMigrator.SQL
                 ", [CONSTRAINT_TYPE]" +
                 ", [IS_DEFERRABLE]" +
                 ", [INITIALLY_DEFERRED]" +
-                " FROM[INFORMATION_SCHEMA].[TABLE_CONSTRAINTS]";
+                " FROM[INFORMATION_SCHEMA].[TABLE_CONSTRAINTS] ORDER BY [CONSTRAINT_NAME]";
         }
 
         //http://www.bidn.com/blogs/TomLannen/bidn-blog/2265/using-hashbytes-to-compare-columns

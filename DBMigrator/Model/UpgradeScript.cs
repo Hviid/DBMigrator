@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace DBMigrator.Model
 {
-    public class UpgradeScript : Script
+    public class UpgradeScript : MigrationScript
     {
         public string Checksum { get; set; }
         public int? ExecutionTime { get; set; }

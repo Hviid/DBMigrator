@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace DBMigrator.Model
 {
-    public class DowngradeScript : Script
+    public class DowngradeScript : MigrationScript
     {
         public UpgradeScript UpgradeScript { get; set; }
 

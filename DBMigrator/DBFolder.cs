@@ -71,7 +71,7 @@ namespace DBMigrator
 
             foreach (var scriptName in sqlScriptsNames.Select(s => Path.GetFileName(s)))
             {
-                var match = Regex.Match(scriptName, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
+                var match = Regex.Match(scriptName, MigrationScript.MIGRATIONS_UPGRADE_FILENAME_REGEX);
 
                 if (match.Success)
                 {
@@ -82,9 +82,9 @@ namespace DBMigrator
                     script.AddFileInfo(GetFileContent(filePath), GetFileChecksum(filePath));
                     script.RollbackScript = FindRollback(script);
                 }
-                else if (!Regex.IsMatch(scriptName, Script.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
+                else if (!Regex.IsMatch(scriptName, MigrationScript.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
                 {
-                    throw new Exception($"file {scriptName} aren't a rollback script, and doesn't match the expected regex format: {Script.MIGRATIONS_UPGRADE_FILENAME_REGEX}");
+                    throw new Exception($"file {scriptName} aren't a rollback script, and doesn't match the expected regex format: {MigrationScript.MIGRATIONS_UPGRADE_FILENAME_REGEX}");
                 }
             }
         }
@@ -116,7 +116,7 @@ namespace DBMigrator
 
         private DowngradeScript FindRollback(UpgradeScript upgradeScript)
         {
-            var match = Regex.Match(upgradeScript.FileName, Script.MIGRATIONS_UPGRADE_FILENAME_REGEX);
+            var match = Regex.Match(upgradeScript.FileName, MigrationScript.MIGRATIONS_UPGRADE_FILENAME_REGEX);
 
             var rollbackFileName = $"{match.Groups[1]}_rollback_{match.Groups[2]}.sql";
 

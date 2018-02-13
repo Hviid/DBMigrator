@@ -17,6 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="TestDBFolderStructure\post.sql" />
+    <None Remove="TestDBFolderStructure\pre.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DBMigrator\DBMigrator.csproj" />
   </ItemGroup>
 

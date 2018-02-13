@@ -36,7 +36,7 @@ namespace DBMigrator.Test
             database.GetDBState();
             database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
 
-            var migrator = new Migrator(database, null);
+            var migrator = new Migrator(database, null, null);
             migrator.Upgrade(new List<DBVersion>{ version });
 
             var versions = database.GetDBState();

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using DBMigrator.Middleware;
 
 namespace DBMigrator.Console
 {
@@ -151,6 +152,8 @@ namespace DBMigrator.Console
             _logger.LogDebug($"Reading from {migrationsDir.FullName}");
             var dbVersions = database.GetDBState();
             var differ = new VersionDiff();
+            var middleware = new Middleware.Middleware();
+            middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
             _logger.LogInformation("Calculating diff");
             var diff = differ.Diff(dbfolder.GetVersions(toVersion), dbVersions);
             if(diff.Count > 0)
@@ -162,7 +165,7 @@ namespace DBMigrator.Console
                     _logger.LogInformation("Apply updates? Press any key to continue upgrade.");
                     System.Console.ReadKey();
                 }
-                var migrator = new Migrator(database, dbfolder);
+                var migrator = new Migrator(database, dbfolder, middleware);
                 var i = 0;
 
                 void callback(object args){
@@ -190,6 +193,8 @@ namespace DBMigrator.Console
             var dbVersions1 = database.GetDBState();
             var dbfolder1 = new DBFolder(migrationsDir);
             var differ1 = new VersionDiff();
+            var middleware = new Middleware.Middleware();
+            middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
             var diff1 = differ1.Diff(dbVersions1, dbfolder1.GetVersions(toVersion));
             if (diff1.Count > 0)
             {
@@ -202,7 +207,7 @@ namespace DBMigrator.Console
                     System.Console.ReadKey();
                 }
 
-                var migrator = new Migrator(database, dbfolder1);
+                var migrator = new Migrator(database, dbfolder1, middleware);
                 migrator.Rollback(diff1);
             }
             else

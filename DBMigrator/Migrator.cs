@@ -19,9 +19,11 @@ namespace DBMigrator
         private DBFolder _dBFolder;
         private readonly ILogger<Migrator> _logger;
         private Regex _goRegex = new Regex(@"[\n\r]GO\b");
+        private Middleware.Middleware _middleware;
 
-        public Migrator(Database database, DBFolder dbFolder)
+        public Migrator(Database database, DBFolder dbFolder, Middleware.Middleware middleware)
         {
+            _middleware = middleware;
             _database = database;
             _dBFolder = dbFolder;
             var loggerFactory = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<ILoggerFactory>();
@@ -41,7 +43,7 @@ namespace DBMigrator
             {
                 foreach (var rollbackToVersion in versionsToRollback)
                 {
-                _logger.LogInformation($"Downgrading to version {rollbackToVersion.Name}");
+                    _logger.LogInformation($"Downgrading to version {rollbackToVersion.Name}");
 
                     foreach (var featureToRollback in rollbackToVersion.Features)
                     {
@@ -70,7 +72,17 @@ namespace DBMigrator
                 return;
             }
             
-            try {
+            try
+            {
+                if(_middleware != null)
+                {
+                    foreach (var preUpgradeScript in _middleware.PreVersionsUpgradeScripts)
+                    {
+                        _logger.LogInformation($"--Running pre upgrade script: {preUpgradeScript.FileName}");
+                        _database.ExecuteSingleCommand(preUpgradeScript.SQL);
+                    }
+                }
+
                 foreach (var upgradeToVersion in versionsToUpgrade)
                 {
                     _logger.LogInformation($"--Upgrading to version {upgradeToVersion.Name}");
@@ -80,6 +92,16 @@ namespace DBMigrator
                         UpgradeFeature(featureToUpgrade);
                     }
                 }
+
+                if (_middleware != null)
+                {
+                    foreach (var postUpgradeScript in _middleware.PostVersionsUpgradeScripts)
+                    {
+                        _logger.LogInformation($"--Running post upgrade script: {postUpgradeScript.FileName}");
+                        _database.ExecuteSingleCommand(postUpgradeScript.SQL);
+                    }
+                }
+
                 //throw new Exception("test");
                 _database.CommitTransaction();
             } catch(Exception ex) {

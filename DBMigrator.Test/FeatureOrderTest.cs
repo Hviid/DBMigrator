@@ -38,6 +38,15 @@ namespace DBMigrator.Test
             Assert.AreEqual(0, order);
             Assert.AreEqual("DF-26261_Fix_Spelling", featurename);
         }
-        
+
+        [TestMethod]
+        public void no_more_then_99_ordering_test()
+        {
+            var (order, featurename) = Feature.GetFeatureNameAndOrder("26261_Fix_Spelling");
+
+            Assert.AreEqual(0, order);
+            Assert.AreEqual("26261_Fix_Spelling", featurename);
+        }
+
     }
 }

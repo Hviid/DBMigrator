@@ -7,7 +7,7 @@ namespace DBMigrator.Model
 {
     public class Feature
     {
-        public const string ORDERED_FEATURENAME_REGEX = @"(\d+)_(\S+)|(\S+)";
+        public const string ORDERED_FEATURENAME_REGEX = @"(\d{2})_(\S+)|(\S+)";
 
         public static (int, string) GetFeatureNameAndOrder(string featurename)
         {

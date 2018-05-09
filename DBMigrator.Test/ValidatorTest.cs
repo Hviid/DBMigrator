@@ -13,7 +13,7 @@ namespace DBMigrator.Test
         private List<DBVersion> Baseline()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddAndOrGetFeature("TestFeature");
+            var feature = version.AddAndOrGetFeature("TestFeature", 0);
             
             var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
@@ -24,7 +24,7 @@ namespace DBMigrator.Test
         private List<DBVersion> Same()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddAndOrGetFeature("TestFeature");
+            var feature = version.AddAndOrGetFeature("TestFeature", 0);
             
             var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
@@ -35,7 +35,7 @@ namespace DBMigrator.Test
         private List<DBVersion> DiffChecksum()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddAndOrGetFeature("TestFeature");
+            var feature = version.AddAndOrGetFeature("TestFeature", 0);
             
             var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "B";
@@ -46,7 +46,7 @@ namespace DBMigrator.Test
         private List<DBVersion> DiffVersion()
         {
             var version = new DBVersion("1.0.1");
-            var feature = version.AddAndOrGetFeature("TestFeature");
+            var feature = version.AddAndOrGetFeature("TestFeature", 0);
             
             var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
@@ -57,7 +57,7 @@ namespace DBMigrator.Test
         private List<DBVersion> DiffFeature()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddAndOrGetFeature("TestFeature2");
+            var feature = version.AddAndOrGetFeature("TestFeature2", 0);
 
             var script = feature.AddUpgradeScript("TestScript.sql", 1);
             script.Checksum = "A";
@@ -68,7 +68,7 @@ namespace DBMigrator.Test
         private List<DBVersion> DiffScript()
         {
             var version = new DBVersion("1.0.0");
-            var feature = version.AddAndOrGetFeature("TestFeature");
+            var feature = version.AddAndOrGetFeature("TestFeature", 0);
 
             var script = feature.AddUpgradeScript("TestScript2.sql", 1);
             script.Checksum = "A";

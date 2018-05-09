@@ -11,8 +11,8 @@ namespace DBMigrator.Model
         public string Name { get { return Version.ToString(); } }
         public Version Version { get; }
         private List<Feature> _features { get; } = new List<Feature>();
-        public IReadOnlyCollection<Feature> Features {
-            get { return _features.AsReadOnly(); }
+        public IOrderedEnumerable<Feature> Features {
+            get { return _features.OrderBy(s => s.Order); }
         }
 
         public DBVersion(string version)
@@ -31,12 +31,12 @@ namespace DBMigrator.Model
             }
         }
 
-        public Feature AddAndOrGetFeature(string featureName)
+        public Feature AddAndOrGetFeature(string featureName, int order)
         {
             var feature = Features.FirstOrDefault(f => f.Name == featureName);
             if (feature == null)
             {
-                feature = new Feature(featureName, this);
+                feature = new Feature(featureName, this, order);
                 _features.Add(feature);
             }
             return feature;

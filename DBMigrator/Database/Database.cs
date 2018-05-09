@@ -86,7 +86,7 @@ namespace DBMigrator
                     var checksum = reader.GetString(5);
                     var executiontime = reader.GetInt32(6);
 
-                    var script = dbversion.AddAndOrGetFeature(feature).AddUpgradeScript(scriptFileName, order);
+                    var script = dbversion.AddAndOrGetFeature(feature, 0).AddUpgradeScript(scriptFileName, order);
                     script.Checksum = checksum;
                     script.ExecutionTime = executiontime;
                 }

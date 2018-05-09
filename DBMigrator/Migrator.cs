@@ -127,7 +127,6 @@ namespace DBMigrator
             
             foreach (var script in feature.UpgradeScripts)
             {
-                _logger.LogInformation($"--------Running script: {script.FileName}");
                 UpgradeWithFile(script);
             }
         }
@@ -139,6 +138,7 @@ namespace DBMigrator
 
         private void UpgradeWithFile(UpgradeScript script)
         {
+            _logger.LogInformation($"--------Running script: {script.FileName}");
             var sw = new Stopwatch();
             sw.Start();
             try
@@ -169,6 +169,7 @@ namespace DBMigrator
                 );
 
                 _database.ExecuteSingleCommand(cmd);
+                _logger.LogInformation($"--------Ran script: {script.FileName} in {sw.Elapsed.TotalSeconds} seconds");
             }
             catch (Exception ex)
             {

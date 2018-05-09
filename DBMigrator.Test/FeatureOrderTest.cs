@@ -29,5 +29,15 @@ namespace DBMigrator.Test
             Assert.AreEqual(0, order);
             Assert.AreEqual("Test2", featurename);
         }
+
+        [TestMethod]
+        public void complex_featurename_test()
+        {
+            var (order, featurename) = Feature.GetFeatureNameAndOrder("DF-26261_Fix_Spelling");
+
+            Assert.AreEqual(0, order);
+            Assert.AreEqual("DF-26261_Fix_Spelling", featurename);
+        }
+        
     }
 }

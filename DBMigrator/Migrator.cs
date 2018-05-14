@@ -64,8 +64,6 @@ namespace DBMigrator
 
         public void Upgrade(List<DBVersion> versionsToUpgrade)
         {
-            _database.BeginTransaction();
-
             if(versionsToUpgrade.Count() == 0)
             {
                 _logger.LogInformation("No upgrades found");
@@ -74,7 +72,7 @@ namespace DBMigrator
             
             try
             {
-                if(_middleware != null)
+                if (_middleware != null)
                 {
                     foreach (var preUpgradeScript in _middleware.PreVersionsUpgradeScripts)
                     {
@@ -82,7 +80,15 @@ namespace DBMigrator
                         _database.ExecuteSingleCommand(preUpgradeScript.SQL);
                     }
                 }
+            } catch(Exception ex)
+            {
+                _logger.LogError(ex, "Failed to run preUpgradeScript");
+                throw ex;
+            }
 
+            try
+            {
+                _database.BeginTransaction();
                 foreach (var upgradeToVersion in versionsToUpgrade)
                 {
                     _logger.LogInformation($"--Upgrading to version {upgradeToVersion.Name}");
@@ -92,7 +98,15 @@ namespace DBMigrator
                         UpgradeFeature(featureToUpgrade);
                     }
                 }
-
+                _database.CommitTransaction();
+                //throw new Exception("test");
+                
+            } catch(Exception ex) {
+                _logger.LogError(ex, ex.Message);
+                _database.RollbackTransaction();
+                throw ex;
+            } finally
+            {
                 if (_middleware != null)
                 {
                     foreach (var postUpgradeScript in _middleware.PostVersionsUpgradeScripts)
@@ -101,15 +115,9 @@ namespace DBMigrator
                         _database.ExecuteSingleCommand(postUpgradeScript.SQL);
                     }
                 }
-
-                //throw new Exception("test");
-                _database.CommitTransaction();
-            } catch(Exception ex) {
-                _logger.LogError(ex, ex.Message);
-                _database.RollbackTransaction();
-                throw ex;
+                _database.Close();
             }
-            _database.Close();
+            
         }
 
         private void DowngradeFeature(Feature feature){

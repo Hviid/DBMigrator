@@ -57,7 +57,7 @@ namespace DBMigrator
             {
                 var (order, featureName) = Feature.GetFeatureNameAndOrder(featureFolder.Name);
 
-                version.AddAndOrGetFeature(featureName, order);
+                version.AddAndOrGetFeature(featureFolder.Name, order);
             }
             foreach (var feature in version.Features)
             {

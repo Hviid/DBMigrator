@@ -49,6 +49,7 @@ namespace DBMigrator.Model
         {
             Name = featureName;
             Version = version;
+            Order = order;
         }
 
         public UpgradeScript AddUpgradeScript(string ScriptFile, int order)

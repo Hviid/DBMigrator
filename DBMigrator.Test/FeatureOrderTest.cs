@@ -48,5 +48,23 @@ namespace DBMigrator.Test
             Assert.AreEqual("26261_Fix_Spelling", featurename);
         }
 
+        [TestMethod]
+        public void feature_ordering_test()
+        {
+            var dbversion = new DBVersion("1.0");
+            dbversion.AddAndOrGetFeature("1", 1);
+            dbversion.AddAndOrGetFeature("0", 0);
+            dbversion.AddAndOrGetFeature("2", 2);
+            dbversion.AddAndOrGetFeature("4", 4);
+            dbversion.AddAndOrGetFeature("3", 3);
+
+            var i = 0;
+            foreach (var feature in dbversion.Features)
+            {
+                Assert.AreEqual(i, feature.Order);
+                Assert.AreEqual(i.ToString(), feature.Name);
+                i++;
+            }
+        }
     }
 }

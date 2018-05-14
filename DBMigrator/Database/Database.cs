@@ -26,11 +26,11 @@ namespace DBMigrator
             string connectionString;
             if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
             {
-                connectionString = $"Data Source={servername};Initial Catalog={database};Integrated Security=true;MultipleActiveResultSets=True";
+                connectionString = $"Application Name=DbMigrator;Data Source={servername};Initial Catalog={database};Integrated Security=true;MultipleActiveResultSets=True";
             }
             else
             {
-                connectionString = $"Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
+                connectionString = $"Application Name=DbMigrator;Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
             }
             SetupConnAndLogger(connectionString);
         }

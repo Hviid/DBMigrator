@@ -102,7 +102,7 @@ namespace DBMigrator
                 //throw new Exception("test");
                 
             } catch(Exception ex) {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, "Error occured rolling back transaction");
                 _database.RollbackTransaction();
                 throw ex;
             } finally

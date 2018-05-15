@@ -57,7 +57,7 @@ namespace DBMigrator
             {
                 var (order, featureName) = Feature.GetFeatureNameAndOrder(featureFolder.Name);
 
-                version.AddAndOrGetFeature(featureFolder.Name, order);
+                version.AddAndOrGetFeature(featureFolder.Name, order, featureFolder.Name);
             }
             foreach (var feature in version.Features)
             {
@@ -99,7 +99,7 @@ namespace DBMigrator
         private string GetFeaturePath(Feature feature)
         {
             var versionFolderPath = Path.Combine(_migrationsDirectory.FullName, feature.Version.Name);
-            return Path.Combine(versionFolderPath, feature.Name);
+            return Path.Combine(versionFolderPath, feature.DirectoryName);
         }
 
         public void AddRollbacks(List<DBVersion> versions)

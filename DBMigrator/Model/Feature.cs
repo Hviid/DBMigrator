@@ -31,6 +31,7 @@ namespace DBMigrator.Model
 
         public int Order { get; }
         public string Name { get; }
+        public string DirectoryName { get; }
         private List<UpgradeScript> _upgradeScripts { get; } = new List<UpgradeScript>();
         public IReadOnlyList<UpgradeScript> UpgradeScripts
         {
@@ -45,11 +46,12 @@ namespace DBMigrator.Model
         
         public DBVersion Version { get; }
 
-        public Feature(string featureName, DBVersion version, int order)
+        public Feature(string featureName, DBVersion version, int order, string directoryName = null)
         {
             Name = featureName;
             Version = version;
             Order = order;
+            DirectoryName = directoryName;
         }
 
         public UpgradeScript AddUpgradeScript(string ScriptFile, int order)

@@ -31,12 +31,12 @@ namespace DBMigrator.Model
             }
         }
 
-        public Feature AddAndOrGetFeature(string featureName, int order)
+        public Feature AddAndOrGetFeature(string featureName, int order, string directoryName = null)
         {
             var feature = Features.FirstOrDefault(f => f.Name == featureName);
             if (feature == null)
             {
-                feature = new Feature(featureName, this, order);
+                feature = new Feature(featureName, this, order, directoryName);
                 _features.Add(feature);
             }
             return feature;

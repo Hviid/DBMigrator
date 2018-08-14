@@ -118,6 +118,7 @@ namespace DBMigrator.Console
                             ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
                             break;
                         default:
+                            _logger.LogInformation("No command type specified");
                             break;
                     }
                 }
@@ -148,8 +149,9 @@ namespace DBMigrator.Console
 
         private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
+            _logger.LogInformation("Starting upgrade");
             var dbfolder = new DBFolder(migrationsDir);
-            _logger.LogDebug($"Reading from {migrationsDir.FullName}");
+            _logger.LogInformation($"Reading from {migrationsDir.FullName}");
             var dbVersions = database.GetDBState();
             var differ = new VersionDiff();
             var middleware = new Middleware.Middleware();
@@ -185,11 +187,12 @@ namespace DBMigrator.Console
             {
                 _logger.LogInformation("Database is up to date.");
             }
-            
+            _logger.LogInformation("Upgrade finished");
         }
 
         private static void Rollback(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
+            _logger.LogInformation("Starting downgrade");
             var dbVersions1 = database.GetDBState();
             var dbfolder1 = new DBFolder(migrationsDir);
             var differ1 = new VersionDiff();
@@ -214,10 +217,12 @@ namespace DBMigrator.Console
             {
                 _logger.LogInformation("Database already downgraded.");
             }
+            _logger.LogInformation("Downgrade finished");
         }
 
         private static void ValidateDatabase(Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
+            _logger.LogInformation("Validating database");
             var dbVersions2 = database.GetDBState();
             var dbfolder2 = new DBFolder(migrationsDir);
             var validator2 = new VersionValidator();

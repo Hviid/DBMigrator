@@ -13,6 +13,11 @@ namespace DBMigrator
 {
     public class Database : IDisposable
     {
+        public enum ScopeSize {
+            All,
+            Version
+        }
+
         public SqlConnection Sqlconn;
         private SqlTransaction trans;
         private readonly ILogger<Database> _logger;
@@ -209,7 +214,7 @@ namespace DBMigrator
         public void BeginTransaction()
         {
             Sqlconn.Open();
-            trans = Sqlconn.BeginTransaction();
+            trans = Sqlconn.BeginTransaction("dbmigrator");
         }
 
         public void CommitTransaction()
@@ -220,7 +225,7 @@ namespace DBMigrator
 
         public void RollbackTransaction()
         {
-            trans.Rollback();
+            trans.Rollback("dbmigrator");
             Sqlconn.Close();
         }
 

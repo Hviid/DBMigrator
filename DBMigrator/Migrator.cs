@@ -30,10 +30,8 @@ namespace DBMigrator
             _logger = loggerFactory.CreateLogger<Migrator>();
         }
 
-        public void Rollback(List<DBVersion> versionsToRollback)
+        public void Rollback(List<DBVersion> versionsToRollback, Database.ScopeSize transactionScopeSize)
         {
-            _database.BeginTransaction();
-
             if (versionsToRollback.Count() == 0)
             {
                 _logger.LogInformation("No downgrades found");
@@ -41,8 +39,14 @@ namespace DBMigrator
 
             try
             {
+                if (transactionScopeSize == Database.ScopeSize.All)
+                    _database.BeginTransaction();
+
                 foreach (var rollbackToVersion in versionsToRollback)
                 {
+                    if (transactionScopeSize == Database.ScopeSize.Version)
+                        _database.BeginTransaction();
+
                     _logger.LogInformation($"Downgrading to version {rollbackToVersion.Name}");
 
                     foreach (var featureToRollback in rollbackToVersion.Features)
@@ -51,8 +55,13 @@ namespace DBMigrator
                     }
 
                     //throw "test"
-                    _database.CommitTransaction();
+                    if (transactionScopeSize == Database.ScopeSize.Version)
+                        _database.CommitTransaction();
                 }
+
+                if (transactionScopeSize == Database.ScopeSize.All)
+                    _database.CommitTransaction();
+
             } catch (Exception ex) {
                 _logger.LogError(ex, ex.Message);
                 _database.RollbackTransaction();
@@ -62,7 +71,7 @@ namespace DBMigrator
             _database.Close();
         }
 
-        public void Upgrade(List<DBVersion> versionsToUpgrade)
+        public void Upgrade(List<DBVersion> versionsToUpgrade, Database.ScopeSize transactionScopeSize)
         {
             if(versionsToUpgrade.Count() == 0)
             {
@@ -88,17 +97,27 @@ namespace DBMigrator
 
             try
             {
-                _database.BeginTransaction();
+                if(transactionScopeSize == Database.ScopeSize.All)
+                    _database.BeginTransaction();
+
                 foreach (var upgradeToVersion in versionsToUpgrade)
                 {
+                    if (transactionScopeSize == Database.ScopeSize.Version)
+                        _database.BeginTransaction();
+
                     _logger.LogInformation($"--Upgrading to version {upgradeToVersion.Name}");
                     
                     foreach (var featureToUpgrade in upgradeToVersion.Features)
                     {
                         UpgradeFeature(featureToUpgrade);
                     }
+
+                    if (transactionScopeSize == Database.ScopeSize.Version)
+                        _database.CommitTransaction();
                 }
-                _database.CommitTransaction();
+
+                if (transactionScopeSize == Database.ScopeSize.All)
+                    _database.CommitTransaction();
                 //throw new Exception("test");
                 
             } catch(Exception ex) {

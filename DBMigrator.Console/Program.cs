@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.CommandLineUtils;
-using DBMigrator.Model;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -20,14 +18,6 @@ namespace DBMigrator.Console
         {
             CommandLineApplication commandLineApplication = new CommandLineApplication(throwOnUnexpectedArg: false);
             commandLineApplication.HelpOption("-? | -h | --help");
-            //CommandArgument names = null;
-            //var test2 = commandLineApplication.Command("name",
-            //    (target) =>
-            //    names = target.Argument(
-            //        "fullname",
-            //        "Enter the full name of the person to be greeted.",
-            //        multipleValues: true));
-            //test2.HelpOption("-? | -h | --help");
             var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validatedatabase>", "Command to execute");
 
             CommandOption versionArg = commandLineApplication.Option(
@@ -58,6 +48,11 @@ namespace DBMigrator.Console
             CommandOption migrationsPathArg = commandLineApplication.Option(
                 "-f |--folderPath <path>",
                 "The path for the folder where migrations are located",
+                CommandOptionType.SingleValue);
+
+            CommandOption transactionScopeArg = commandLineApplication.Option(
+                "-t |--transactionscope <all|version>",
+                "Determines the size of the transactionscopes",
                 CommandOptionType.SingleValue);
 
             CommandOption noPromptArg = commandLineApplication.Option(
@@ -95,6 +90,7 @@ namespace DBMigrator.Console
                 var password = passwordArg.Value();
                 var databasename = databasenameArg.Value();
                 var database = new Database(servername, databasename, username, password);
+                var transactionScopeSize = (transactionScopeArg.HasValue() && transactionScopeArg.Value() == "version") ? Database.ScopeSize.Version : Database.ScopeSize.All;
 
                 try
                 {
@@ -105,14 +101,14 @@ namespace DBMigrator.Console
                             {
                                 ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
                             }
-                            Upgrade(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
+                            Upgrade(versionArg.Value(), database, migrationDirectory, transactionScopeSize, noPromptArg.HasValue());
                             break;
                         case "downgrade":
                             if (!noValidationArg.HasValue())
                             {
                                 ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
                             }
-                            Rollback(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
+                            Rollback(versionArg.Value(), database, migrationDirectory, transactionScopeSize, noPromptArg.HasValue());
                             break;
                         case "validatedatabase":
                             ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
@@ -147,7 +143,7 @@ namespace DBMigrator.Console
             //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
-        private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
+        private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, Database.ScopeSize transactionScopeSize, bool noPrompt = false)
         {
             _logger.LogInformation("Starting upgrade");
             var dbfolder = new DBFolder(migrationsDir);
@@ -175,7 +171,7 @@ namespace DBMigrator.Console
                 }
 
                 var timer = new Timer(callback, null, 0, 1000);
-                migrator.Upgrade(diff);
+                migrator.Upgrade(diff, transactionScopeSize);
                 timer.Dispose();
 
                 if (!noPrompt)
@@ -190,7 +186,7 @@ namespace DBMigrator.Console
             _logger.LogInformation("Upgrade finished");
         }
 
-        private static void Rollback(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
+        private static void Rollback(string toVersion, Database database, DirectoryInfo migrationsDir, Database.ScopeSize transactionScopeSize, bool noPrompt = false)
         {
             _logger.LogInformation("Starting downgrade");
             var dbVersions1 = database.GetDBState();
@@ -211,7 +207,7 @@ namespace DBMigrator.Console
                 }
 
                 var migrator = new Migrator(database, dbfolder1, middleware);
-                migrator.Rollback(diff1);
+                migrator.Rollback(diff1, transactionScopeSize);
             }
             else
             {

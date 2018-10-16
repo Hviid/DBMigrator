@@ -43,6 +43,10 @@ namespace DBMigrator
         private void SetupConnAndLogger(string connectionString)
         {
             Sqlconn = new SqlConnection(connectionString);
+            Sqlconn.Open();
+            ExecuteSingleCommand(ChecksumScripts.DropCustomHasbytesFunction);
+            ExecuteSingleCommand(ChecksumScripts.CreateCustomHashbytesFunction);
+            Sqlconn.Close();
         }
 
         private void CreateDBVersionTable()
@@ -54,8 +58,6 @@ namespace DBMigrator
         public List<DBVersion> GetDBState()
         {
             Sqlconn.Open();
-            ExecuteSingleCommand(ChecksumScripts.DropCustomHasbytesFunction);
-            ExecuteSingleCommand(ChecksumScripts.CreateCustomHashbytesFunction);
             SqlDataReader reader;
             var result = new List<DBVersion>();
             try
@@ -214,7 +216,7 @@ namespace DBMigrator
         public void BeginTransaction()
         {
             Sqlconn.Open();
-            trans = Sqlconn.BeginTransaction("dbmigrator");
+            trans = Sqlconn.BeginTransaction();
         }
 
         public void CommitTransaction()
@@ -225,7 +227,7 @@ namespace DBMigrator
 
         public void RollbackTransaction()
         {
-            trans.Rollback("dbmigrator");
+            trans.Rollback();
             Sqlconn.Close();
         }
 

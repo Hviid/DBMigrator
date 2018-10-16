@@ -31,7 +31,6 @@ namespace DBMigrator.Test
             script.Checksum = "A";
             script.SQL = "SELECT * FROM DBVersionScripts";
 
-
             var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
             database.GetDBState();
             database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
@@ -48,6 +47,20 @@ namespace DBMigrator.Test
             Assert.AreEqual(1, dbScript.Order);
             Assert.AreEqual("A", dbScript.Checksum);
             Assert.AreNotEqual(dbScript.ExecutionTime, null);
+        }
+
+        [TestMethod]
+        public void Transaction_in_script_test()
+        {
+            var version = new DBVersion("1.0.0");
+            var script = version.AddAndOrGetFeature("Feature", 0).AddUpgradeScript("01_test.sql", 1);
+            script.Checksum = "A";
+            script.SQL = "BEGIN TRANSACTION SELECT * FROM DBVersionScripts COMMIT TRANSACTION";
+
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+
+            var migrator = new Migrator(database, null, null);
+            migrator.Upgrade(new List<DBVersion> { version }, Database.ScopeSize.All);
         }
     }
 }

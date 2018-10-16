@@ -6,11 +6,9 @@
     <OutputType>Exe</OutputType>
     <PackageId>DBMigrator.Console</PackageId>
     <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageReleaseNotes>$([System.IO.File]::ReadAllText("C:\Users\hviid\source\repos\DBMigrator\DBMigrator.Console\CHANGELOG.md"))</PackageReleaseNotes>
+    <Product>$([System.Guid]::NewGuid())</Product>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +30,10 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' ">
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

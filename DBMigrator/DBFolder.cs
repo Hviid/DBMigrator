@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace DBMigrator
 {
@@ -145,7 +146,35 @@ namespace DBMigrator
 
         private string GetFileContent(string filePath)
         {
-            return System.IO.File.ReadAllText(filePath);
+            var encoding = GetFileEncoding(filePath);
+            if (encoding == null)
+                throw new Exception("Unknown encoding not supported, make sure your file are either: UTF8, Unicode, UTF32 and UTF7 are supported");
+            return File.ReadAllText(filePath, encoding);
+        }
+
+        private static Encoding GetFileEncoding(string srcFile)
+        {
+            Encoding enc = null;
+            
+            // *** Detect byte order mark if any - otherwise assume default
+            byte[] buffer = new byte[5];
+            FileStream file = new FileStream(srcFile, FileMode.Open);
+            file.Read(buffer, 0, 5);
+            file.Dispose(); //close;
+
+
+
+            if (buffer[0] == 0xef && buffer[1] == 0xbb && buffer[2] == 0xbf)
+                enc = Encoding.UTF8;
+            else if (buffer[0] == 0xfe && buffer[1] == 0xff)
+                enc = Encoding.Unicode;
+            else if (buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0xfe && buffer[3] == 0xff)
+                enc = Encoding.UTF32;
+            else if (buffer[0] == 0x2b && buffer[1] == 0x2f && buffer[2] == 0x76)
+                enc = Encoding.UTF7;
+            
+            return enc;
+
         }
     }
 }

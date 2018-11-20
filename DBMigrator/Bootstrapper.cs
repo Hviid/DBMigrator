@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DBMigrator
 {
-    public class Bootstrapper
+    public static class Bootstrapper
     {
         private static IServiceCollection _serviceCollection;
 

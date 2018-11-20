@@ -16,7 +16,7 @@ namespace DBMigrator
     public class Migrator : IDisposable
     {
         private Database _database;
-        private DBFolder _dBFolder;
+        private readonly DBFolder _dBFolder;
         private readonly ILogger<Migrator> _logger;
         private Regex _goRegex = new Regex(@"\bGO\b");
         private Middleware.Middleware _middleware;
@@ -92,7 +92,7 @@ namespace DBMigrator
             } catch(Exception ex)
             {
                 _logger.LogError(ex, "Failed to run preUpgradeScript");
-                throw ex;
+                throw;
             }
 
             try
@@ -123,7 +123,7 @@ namespace DBMigrator
             } catch(Exception ex) {
                 _logger.LogError(ex, "Error occured rolling back transaction");
                 _database.RollbackTransaction();
-                throw ex;
+                throw;
             } finally
             {
                 if (_middleware != null)

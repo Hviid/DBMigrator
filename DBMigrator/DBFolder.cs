@@ -148,7 +148,7 @@ namespace DBMigrator
         {
             var encoding = GetFileEncoding(filePath);
             if (encoding == null)
-                throw new Exception("Unknown encoding not supported, make sure your file are either: UTF8, Unicode, UTF32 and UTF7 are supported");
+                throw new Exception($"File: {filePath} has unknown encoding, make sure your file are either: UTF8, Unicode, UTF32 and UTF7");
             return File.ReadAllText(filePath, encoding);
         }
 

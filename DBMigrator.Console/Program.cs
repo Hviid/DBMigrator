@@ -28,7 +28,7 @@ namespace DBMigrator.Console
             //        "Enter the full name of the person to be greeted.",
             //        multipleValues: true));
             //test2.HelpOption("-? | -h | --help");
-            var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validatedatabase>", "Command to execute");
+            var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validatedatabase|upgrade_file>", "Command to execute");
 
             CommandOption versionArg = commandLineApplication.Option(
                 "-v |--version <version>",
@@ -117,6 +117,9 @@ namespace DBMigrator.Console
                         case "validatedatabase":
                             ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
                             break;
+                        case "upgrade_file":
+                            UpgradeFile(migrationDirectory, noPromptArg.HasValue());
+                            break;
                         default:
                             _logger.LogInformation("No command type specified");
                             break;
@@ -145,6 +148,29 @@ namespace DBMigrator.Console
             return new DirectoryInfo(Path.GetDirectoryName(typeof(VersionValidator).GetTypeInfo().Assembly.Location));
             //new DirectoryInfo(Path.GetDirectoryName(AppContext.BaseDirectory));
             //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+        }
+
+        private static void UpgradeFile(DirectoryInfo migrationsDir, bool noPrompt = false)
+        {
+            _logger.LogInformation("Starting file upgrade");
+            var dbfolder = new DBFolder(migrationsDir);
+            _logger.LogInformation($"Reading from {migrationsDir.FullName}");
+            var middleware = new Middleware.Middleware();
+            middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
+            
+            var migrator = new Migrator(new TextFileDB(migrationsDir), dbfolder, middleware);
+            var i = 0;
+
+            void callback(object args)
+            {
+                System.Console.Write("\r{0} secs", i++);
+            }
+
+            var timer = new Timer(callback, null, 0, 1000);
+            migrator.Upgrade(dbfolder.allVersions);
+            timer.Dispose();
+
+            _logger.LogInformation("Upgrade finished");
         }
 
         private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)

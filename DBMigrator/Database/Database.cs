@@ -8,14 +8,16 @@ using System.Collections.Generic;
 using System.Linq;
 using DBMigrator.SQL;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 
 namespace DBMigrator
 {
-    public class Database : IDisposable
+    public class Database : IDatabase
     {
         public SqlConnection Sqlconn;
         private SqlTransaction trans;
         private readonly ILogger<Database> _logger;
+        private Regex _goRegex = new Regex(@"[\n\r]GO\b");
 
 
         public Database(string servername, string database, string username, string password)
@@ -172,7 +174,7 @@ namespace DBMigrator
             return (currentTriggersChecksum, currentTablesViewsAndColumnsChecksum, currentFunctionsChecksum, currentStoredProceduresChecksum, currentIndexesChecksum);
         }
 
-        public void ExecuteMultipleCommands(IEnumerable<string> cmds)
+        private void ExecuteMultipleCommands(IEnumerable<string> cmds)
         {
             var alreadyOpen = Sqlconn.State == System.Data.ConnectionState.Open;
             if (!alreadyOpen)
@@ -191,9 +193,14 @@ namespace DBMigrator
             }
         }
 
+        public void ExecuteUpgradeCommand(string version, string feature, string scriptFile, string cmd)
+        {
+            ExecuteMultipleCommands(BatchByGoStatement(cmd));
+        }
+
         public void ExecuteSingleCommand(string cmd)
         {
-            ExecuteMultipleCommands(new string[] { cmd });
+            ExecuteMultipleCommands(BatchByGoStatement(cmd));
         }
 
         public SqlDataReader ExecuteCommand(string cmd)
@@ -233,6 +240,11 @@ namespace DBMigrator
         {
             if(Sqlconn.State != System.Data.ConnectionState.Closed)
                 Sqlconn.Close();
+        }
+        
+        private IEnumerable<string> BatchByGoStatement(string sqltext)
+        {
+            return _goRegex.Split(sqltext).Where(cmd => !string.IsNullOrWhiteSpace(cmd));
         }
     }
 }

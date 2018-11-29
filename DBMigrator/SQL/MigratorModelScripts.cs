@@ -36,6 +36,12 @@ namespace DBMigrator.SQL
                 "[DatabaseFunctionsChecksum], [DatabaseStoredProceduresChecksum], [DatabaseIndexesChecksum] FROM [DBVersionScripts]";
         }
 
+
+        public static string QueryScript(string version, string feature, string script)
+        {
+            return $"SELECT 1 FROM [DBVersionScripts] WHERE [Version] = '{version}' AND [Feature] = '{feature}' AND [Script] = '{script}'";
+        }
+
         public static string GetInsertDBVersionScript(string version, int order, string featurename, string filename, string checksum,
             string databaseTriggersChecksum, string databaseTablesAndViewsChecksum, string databaseFunctionsChecksum, string databaseStoredProceduresChecksum,
             string databaseIndexesChecksum, int scriptExecutionTime)

@@ -18,12 +18,16 @@ namespace DBMigrator.Test
 
             feature.AddUpgradeScript("TestScript.sql", 1);
 
-            var version2 = new DBVersion("2.0.0");
+            var version2 = new DBVersion("1.9.0");
             var feature2 = version2.AddAndOrGetFeature("TestFeature2", 0);
 
             feature2.AddUpgradeScript("TestScript2.sql", 1);
+            var version3 = new DBVersion("1.10.0");
+            var feature3 = version3.AddAndOrGetFeature("TestFeature3", 0);
 
-            return new List<DBVersion> { version, version2 };
+            feature3.AddUpgradeScript("TestScript3.sql", 1);
+
+            return new List<DBVersion> { version, version3, version2 };
         }
 
         private List<DBVersion> Database()
@@ -38,12 +42,17 @@ namespace DBMigrator.Test
 
         private List<DBVersion> ExpectedDiff()
         {
-            var version2 = new DBVersion("2.0.0");
+            var version2 = new DBVersion("1.9.0");
             var feature2 = version2.AddAndOrGetFeature("TestFeature2", 0);
 
             feature2.AddUpgradeScript("TestScript2.sql", 1);
 
-            return new List<DBVersion> { version2 };
+            var version3 = new DBVersion("1.10.0");
+            var feature3 = version3.AddAndOrGetFeature("TestFeature3", 0);
+
+            feature3.AddUpgradeScript("TestScript3.sql", 1);
+
+            return new List<DBVersion> { version2, version3 };
         }
 
 
@@ -54,14 +63,21 @@ namespace DBMigrator.Test
 
             var diff = differ.Diff(Folder(), Database());
 
-            Assert.AreEqual(1, diff.Count);
+            Assert.AreEqual(2, diff.ToList().Count);
             Assert.AreEqual(ExpectedDiff().First().Name, diff.First().Name);
+            Assert.AreEqual(ExpectedDiff().Last().Name, diff.Last().Name);
 
             Assert.AreEqual(1, diff.First().Features.Count());
             Assert.AreEqual(ExpectedDiff().First().Features.First().Name, diff.First().Features.First().Name);
 
+            Assert.AreEqual(1, diff.Last().Features.Count());
+            Assert.AreEqual(ExpectedDiff().Last().Features.Last().Name, diff.Last().Features.Last().Name);
+
             Assert.AreEqual(1, diff.First().Features.First().UpgradeScripts.Count);
             Assert.AreEqual(ExpectedDiff().First().Features.First().Name, diff.First().Features.First().Name);
+
+            Assert.AreEqual(1, diff.Last().Features.Last().UpgradeScripts.Count);
+            Assert.AreEqual(ExpectedDiff().Last().Features.Last().Name, diff.Last().Features.Last().Name);
         }
     }
 }

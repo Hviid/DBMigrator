@@ -55,7 +55,7 @@ namespace DBMigrator
         /// <param name="source"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        public List<DBVersion> Diff(List<DBVersion> source, List<DBVersion> target)
+        public IOrderedEnumerable<DBVersion> Diff(List<DBVersion> source, List<DBVersion> target)
         {
             var diff = new List<DBVersion>();
             foreach (var sourceVersion in source)
@@ -104,7 +104,7 @@ namespace DBMigrator
                     }
                 }
             }
-            return diff;
+            return diff.OrderBy(a => a.Version);
         }
 
         private void CopyFeatureToVersion(Feature sourceFeature, DBVersion target)

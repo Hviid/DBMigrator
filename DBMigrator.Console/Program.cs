@@ -5,7 +5,7 @@ using DBMigrator.Model;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Threading.Tasks;
+using System.Linq;
 using System.Threading;
 using System;
 using DBMigrator.Middleware;
@@ -183,7 +183,7 @@ namespace DBMigrator.Console
             var middleware = new Middleware.Middleware();
             middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
             _logger.LogInformation("Calculating diff");
-            var diff = differ.Diff(dbfolder.GetVersions(toVersion), dbVersions);
+            var diff = differ.Diff(dbfolder.GetVersions(toVersion), dbVersions).ToList();
             if(diff.Count > 0)
             {
                 var diffText = differ.UpgradeDiffText(diff);
@@ -224,7 +224,7 @@ namespace DBMigrator.Console
             var differ1 = new VersionDiff();
             var middleware = new Middleware.Middleware();
             middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
-            var diff1 = differ1.Diff(dbVersions1, dbfolder1.GetVersions(toVersion));
+            var diff1 = differ1.Diff(dbVersions1, dbfolder1.GetVersions(toVersion)).ToList();
             if (diff1.Count > 0)
             {
                 dbfolder1.AddRollbacks(diff1);

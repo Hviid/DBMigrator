@@ -3,7 +3,7 @@ using DBMigrator.Test.Comparers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 
 namespace DBMigrator.Test
 {
@@ -43,7 +43,7 @@ namespace DBMigrator.Test
 
             var diff = differ.Diff(Folder(), Database());
 
-            Assert.AreEqual(0, diff.Count);
+            Assert.AreEqual(0, diff.ToList().Count);
         }
     }
 }

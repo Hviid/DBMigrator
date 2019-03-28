@@ -2,7 +2,7 @@
 using DBMigrator.Test.Comparers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 
 namespace DBMigrator.Test
 {
@@ -53,7 +53,7 @@ namespace DBMigrator.Test
             var actualDiff = versionDiff.Diff(Folder(), Database());
             var expectedDiff = ExpectedDiff();
             
-            CollectionAssert.AreEqual(expectedDiff, actualDiff, new DBVersionComparer());
+            CollectionAssert.AreEqual(expectedDiff, actualDiff.ToList(), new DBVersionComparer());
         }
     }
 }

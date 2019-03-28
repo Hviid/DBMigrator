@@ -246,5 +246,13 @@ namespace DBMigrator
         {
             return _goRegex.Split(sqltext).Where(cmd => !string.IsNullOrWhiteSpace(cmd));
         }
+
+        public void FixChecksum(UpgradeScript sourceScript)
+        {
+            Sqlconn.Open();
+            var script = MigratorModelScripts.GetChecksumUpdateScript(sourceScript.Feature.Version.Name, sourceScript.Order, sourceScript.Feature.Name, sourceScript.Checksum);
+            ExecuteCommand(script);
+            Sqlconn.Close();
+        }
     }
 }

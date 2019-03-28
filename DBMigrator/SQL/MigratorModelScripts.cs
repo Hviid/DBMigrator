@@ -74,7 +74,13 @@ namespace DBMigrator.SQL
                     $"{databaseIndexesChecksum}, " +
                     $"{scriptExecutionTime})";
         }
-
+        public static string GetChecksumUpdateScript(string version, int order, string featureName, string checksum)
+        {
+            return "UPDATE DBVersionScripts SET ScriptFileChecksum = '" + checksum +
+                "' WHERE Version = '" + version + "' AND " +
+                "Feature = '" + featureName + "' AND " +
+                "[Order] = " + order;
+        }
         public static string GetDeleteDBVersionScript(string rollbackFileName)
         {
             return $"DELETE FROM DBVersionScripts WHERE Script = '{rollbackFileName}'";

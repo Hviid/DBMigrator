@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.CommandLineUtils;
 using DBMigrator.Model;
-using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Reflection;
 using System.Linq;
@@ -116,6 +116,9 @@ namespace DBMigrator.Console
                             break;
                         case "validatedatabase":
                             ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
+                            break;
+                        case "fixchecksums":
+                            FixChecksums(database, migrationDirectory);
                             break;
                         case "upgrade_file":
                             UpgradeFile(migrationDirectory, noPromptArg.HasValue());
@@ -259,6 +262,34 @@ namespace DBMigrator.Console
             _logger.LogInformation("Validating DB integrity");
             DBValidator.Validate();
             _logger.LogInformation("DB integrity validation passed");
+        }
+        private static void FixChecksums(Database database, DirectoryInfo migrationsDir)
+        {
+            _logger.LogInformation("Fix checksums");
+            var target = database.GetDBState();
+            var source = new DBFolder(migrationsDir).allVersions;
+            foreach (var targetVersion in target)
+            {
+                var sourceVersion = source.SingleOrDefault(t => t.Name == targetVersion.Name);
+                if (sourceVersion == null) throw new Exception($"Could not find target version {targetVersion.Name} in source");
+
+                foreach (var targetFeature in targetVersion.Features)
+                {
+                    var sourceFeature = sourceVersion.Features.SingleOrDefault(s => s.Name == targetFeature.Name);
+                    if (sourceFeature == null) throw new Exception($"Could not find target feature {targetFeature.Name} in source for version {targetVersion.Name}");
+
+                    foreach (var targetScript in targetFeature.UpgradeScripts)
+                    {
+                        var sourceScript = sourceFeature.UpgradeScripts.SingleOrDefault(s => s.FileName == targetScript.FileName);
+                        if (sourceScript == null) throw new Exception($"Could not find target script {targetScript.FileName} in target feature {targetFeature.Name} in source for version {targetVersion.Name}");
+                        if (sourceScript.Order != targetScript.Order) throw new Exception($"Target script {targetScript.FileName} order {targetScript.Order} are not equal to source script {sourceScript.FileName} order {sourceScript.Order}");
+                        if (sourceScript.Checksum != targetScript.Checksum)
+                        {
+                            database.FixChecksum(sourceScript);
+                        }
+                    }
+                }
+            }
         }
     }
 }

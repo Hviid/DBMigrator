@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 
 namespace DBMigrator.Test
 {
@@ -32,7 +33,7 @@ namespace DBMigrator.Test
 
             var diff = differ.Diff(dbFolder.allVersions, Folder());
 
-            Assert.AreEqual(0, diff.Count);
+            Assert.AreEqual(0, diff.ToList().Count);
         }
 
     }

@@ -36,6 +36,12 @@ namespace DBMigrator.SQL
                 "[DatabaseFunctionsChecksum], [DatabaseStoredProceduresChecksum], [DatabaseIndexesChecksum] FROM [DBVersionScripts]";
         }
 
+
+        public static string QueryScript(string version, string feature, string script)
+        {
+            return $"SELECT 1 FROM [DBVersionScripts] WHERE [Version] = '{version}' AND [Feature] = '{feature}' AND [Script] = '{script}'";
+        }
+
         public static string GetInsertDBVersionScript(string version, int order, string featurename, string filename, string checksum,
             string databaseTriggersChecksum, string databaseTablesAndViewsChecksum, string databaseFunctionsChecksum, string databaseStoredProceduresChecksum,
             string databaseIndexesChecksum, int scriptExecutionTime)
@@ -68,7 +74,13 @@ namespace DBMigrator.SQL
                     $"{databaseIndexesChecksum}, " +
                     $"{scriptExecutionTime})";
         }
-
+        public static string GetChecksumUpdateScript(string version, int order, string featureName, string checksum)
+        {
+            return "UPDATE DBVersionScripts SET ScriptFileChecksum = '" + checksum +
+                "' WHERE Version = '" + version + "' AND " +
+                "Feature = '" + featureName + "' AND " +
+                "[Order] = " + order;
+        }
         public static string GetDeleteDBVersionScript(string rollbackFileName)
         {
             return $"DELETE FROM DBVersionScripts WHERE Script = '{rollbackFileName}'";

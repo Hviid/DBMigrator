@@ -148,15 +148,16 @@ namespace DBMigrator
         {
             var encoding = GetFileEncoding(filePath);
             if (encoding == null)
-                throw new Exception("Unknown encoding not supported, make sure your file are either: UTF8, Unicode, UTF32 and UTF7 are supported");
+                throw new Exception($"File: {filePath} has unknown encoding, make sure your files are either: UTF8, Unicode, UTF32 or UTF7. With BOM");
             return File.ReadAllText(filePath, encoding);
         }
 
+        //Inspired by
+        //https://weblog.west-wind.com/posts/2007/Nov/28/Detecting-Text-Encoding-for-StreamReader
         private static Encoding GetFileEncoding(string srcFile)
         {
             Encoding enc = null;
             
-            // *** Detect byte order mark if any - otherwise assume default
             byte[] buffer = new byte[5];
             FileStream file = new FileStream(srcFile, FileMode.Open);
             file.Read(buffer, 0, 5);

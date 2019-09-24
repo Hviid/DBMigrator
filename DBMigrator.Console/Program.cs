@@ -2,10 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.CommandLineUtils;
 using DBMigrator.Model;
-using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Reflection;
-using System.Threading.Tasks;
+using System.Linq;
 using System.Threading;
 using System;
 using DBMigrator.Middleware;
@@ -28,7 +28,7 @@ namespace DBMigrator.Console
             //        "Enter the full name of the person to be greeted.",
             //        multipleValues: true));
             //test2.HelpOption("-? | -h | --help");
-            var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validatedatabase>", "Command to execute");
+            var commandArg = commandLineApplication.Argument("command <upgrade|downgrade|validatedatabase|upgrade_file>", "Command to execute");
 
             CommandOption versionArg = commandLineApplication.Option(
                 "-v |--version <version>",
@@ -117,6 +117,12 @@ namespace DBMigrator.Console
                         case "validatedatabase":
                             ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
                             break;
+                        case "fixchecksums":
+                            FixChecksums(database, migrationDirectory);
+                            break;
+                        case "upgrade_file":
+                            UpgradeFile(migrationDirectory, noPromptArg.HasValue());
+                            break;
                         default:
                             _logger.LogInformation("No command type specified");
                             break;
@@ -147,6 +153,29 @@ namespace DBMigrator.Console
             //new DirectoryInfo(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
         }
 
+        private static void UpgradeFile(DirectoryInfo migrationsDir, bool noPrompt = false)
+        {
+            _logger.LogInformation("Starting file upgrade");
+            var dbfolder = new DBFolder(migrationsDir);
+            _logger.LogInformation($"Reading from {migrationsDir.FullName}");
+            var middleware = new Middleware.Middleware();
+            middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
+            
+            var migrator = new Migrator(new TextFileDB(migrationsDir), dbfolder, middleware);
+            var i = 0;
+
+            void callback(object args)
+            {
+                System.Console.Write("\r{0} secs", i++);
+            }
+
+            var timer = new Timer(callback, null, 0, 1000);
+            migrator.Upgrade(dbfolder.allVersions);
+            timer.Dispose();
+
+            _logger.LogInformation("Upgrade finished");
+        }
+
         private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
         {
             _logger.LogInformation("Starting upgrade");
@@ -157,7 +186,7 @@ namespace DBMigrator.Console
             var middleware = new Middleware.Middleware();
             middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
             _logger.LogInformation("Calculating diff");
-            var diff = differ.Diff(dbfolder.GetVersions(toVersion), dbVersions);
+            var diff = differ.Diff(dbfolder.GetVersions(toVersion), dbVersions).ToList();
             if(diff.Count > 0)
             {
                 var diffText = differ.UpgradeDiffText(diff);
@@ -198,7 +227,7 @@ namespace DBMigrator.Console
             var differ1 = new VersionDiff();
             var middleware = new Middleware.Middleware();
             middleware.RegisterMiddleware(new PrePostMigrationScripts(migrationsDir));
-            var diff1 = differ1.Diff(dbVersions1, dbfolder1.GetVersions(toVersion));
+            var diff1 = differ1.Diff(dbVersions1, dbfolder1.GetVersions(toVersion)).ToList();
             if (diff1.Count > 0)
             {
                 dbfolder1.AddRollbacks(diff1);
@@ -233,6 +262,34 @@ namespace DBMigrator.Console
             _logger.LogInformation("Validating DB integrity");
             DBValidator.Validate();
             _logger.LogInformation("DB integrity validation passed");
+        }
+        private static void FixChecksums(Database database, DirectoryInfo migrationsDir)
+        {
+            _logger.LogInformation("Fix checksums");
+            var target = database.GetDBState();
+            var source = new DBFolder(migrationsDir).allVersions;
+            foreach (var targetVersion in target)
+            {
+                var sourceVersion = source.SingleOrDefault(t => t.Name == targetVersion.Name);
+                if (sourceVersion == null) throw new Exception($"Could not find target version {targetVersion.Name} in source");
+
+                foreach (var targetFeature in targetVersion.Features)
+                {
+                    var sourceFeature = sourceVersion.Features.SingleOrDefault(s => s.Name == targetFeature.Name);
+                    if (sourceFeature == null) throw new Exception($"Could not find target feature {targetFeature.Name} in source for version {targetVersion.Name}");
+
+                    foreach (var targetScript in targetFeature.UpgradeScripts)
+                    {
+                        var sourceScript = sourceFeature.UpgradeScripts.SingleOrDefault(s => s.FileName == targetScript.FileName);
+                        if (sourceScript == null) throw new Exception($"Could not find target script {targetScript.FileName} in target feature {targetFeature.Name} in source for version {targetVersion.Name}");
+                        if (sourceScript.Order != targetScript.Order) throw new Exception($"Target script {targetScript.FileName} order {targetScript.Order} are not equal to source script {sourceScript.FileName} order {sourceScript.Order}");
+                        if (sourceScript.Checksum != targetScript.Checksum)
+                        {
+                            database.FixChecksum(sourceScript);
+                        }
+                    }
+                }
+            }
         }
     }
 }

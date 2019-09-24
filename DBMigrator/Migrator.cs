@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
 using DBMigrator.Model;
 using Microsoft.Extensions.Logging;
-using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using DBMigrator.SQL;
-using System.Text.RegularExpressions;
 
 namespace DBMigrator
 {
     public class Migrator : IDisposable
     {
-        private Database _database;
+        private IDatabase _database;
         private DBFolder _dBFolder;
         private readonly ILogger<Migrator> _logger;
-        private Regex _goRegex = new Regex(@"[\n\r]GO\b");
         private Middleware.Middleware _middleware;
 
-        public Migrator(Database database, DBFolder dbFolder, Middleware.Middleware middleware)
+        public Migrator(IDatabase database, DBFolder dbFolder, Middleware.Middleware middleware)
         {
             _middleware = middleware;
             _database = database;
@@ -139,11 +134,6 @@ namespace DBMigrator
             }
         }
 
-        private IEnumerable<string> BatchByGoStatement(string sqltext)
-        {
-            return _goRegex.Split(sqltext).Where(cmd => !string.IsNullOrWhiteSpace(cmd));
-        }
-
         private void UpgradeWithFile(UpgradeScript script)
         {
             _logger.LogInformation($"--------Running script: {script.FileName}");
@@ -151,7 +141,7 @@ namespace DBMigrator
             sw.Start();
             try
             {
-                _database.ExecuteMultipleCommands(BatchByGoStatement(script.SQL));
+                _database.ExecuteUpgradeCommand(script.Feature.Version.Name, script.Feature.Name, script.FileName, script.SQL);
             }
             catch (Exception ex)
             {
@@ -176,7 +166,7 @@ namespace DBMigrator
                     script.ExecutionTime.Value
                 );
 
-                _database.ExecuteSingleCommand(cmd);
+                _database.ExecuteUpgradeCommand(script.Feature.Version.Name, script.Feature.Name, script.FileName, cmd);
                 _logger.LogInformation($"--------Ran script: {script.FileName} in {sw.Elapsed.TotalSeconds} seconds");
             }
             catch (Exception ex)

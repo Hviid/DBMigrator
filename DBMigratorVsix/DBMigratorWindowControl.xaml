@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="DBMigratorVsix.DBMigratorWindowControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vsshell="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
+             Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
+             Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="300"
+             Name="MyToolWindow">
+    <Grid>
+        <StackPanel Orientation="Vertical">
+            <TextBlock Margin="0,10" HorizontalAlignment="Center">DBMigrator</TextBlock>
+            <TextBlock Margin="10,0,10,0" HorizontalAlignment="Center">Migrations Path</TextBlock>
+            <TextBox Height="23" Margin="10,0,10,0" TextWrapping="Wrap" Name="MigrationPath" Text="{Binding MigrationsPath, Mode = OneWay}"/>
+            <TextBlock Margin="10,10,10,0" HorizontalAlignment="Center">Server</TextBlock>
+            <TextBox Height="23" Margin="10,0,10,0" TextWrapping="Wrap" Text="sql.amphi.local" Name="Server"/>
+            <TextBlock Margin="10,10,10,0" HorizontalAlignment="Center">Database</TextBlock>
+            <TextBox Height="23" Margin="10,0,10,0" TextWrapping="Wrap" Name="Database"/>
+            <TextBlock Margin="10,10,10,0" HorizontalAlignment="Center">Username</TextBlock>
+            <TextBox Height="23" Margin="10,0,10,0" TextWrapping="Wrap" Name="Username"/>
+            <TextBlock Margin="10,10,10,0" HorizontalAlignment="Center">Password</TextBlock>
+            <PasswordBox  Height="23" Margin="10,0,10,0" Name="Password" />
+            <TextBlock Margin="10,10,10,0" HorizontalAlignment="Center">Target version</TextBlock>
+            <TextBox Height="23" Margin="10,0,10,0" TextWrapping="Wrap" Text="{Binding TargetVersion, Mode = TwoWay}"/>
+            <StackPanel Orientation="Horizontal" Margin="10">
+                <Button Content="Upgrade" Click="Upgrade" Height="40" x:Name="button1" Margin="0,0,40,0" HorizontalAlignment="Right" Width="120"/>
+                <Button Content="Downgrade" Click="Downgrade" Height="40" x:Name="button2" Margin="0,0,0,0" HorizontalAlignment="Left" Width="120"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

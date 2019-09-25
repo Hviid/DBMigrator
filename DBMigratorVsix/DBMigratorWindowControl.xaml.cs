@@ -26,38 +26,38 @@
         }
         private void Upgrade(object sender, RoutedEventArgs e)
         {
-            var username = Username.Text;
-            var password = Password.Password;
-            var server = Server.Text;
-            var database = Database.Text;
-            var path = MigrationPath.Text;
-
-            var cmd = $@"C:\dbmigrator\dbmigrator.exe upgrade -s {server} -d {database}";
-
-            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-                cmd += $" -u {username} -p {password}";
-
-            cmd += $"-f {path}";
+            var cmd = BuildMigrationCmd("upgrade");
 
             System.Diagnostics.Process.Start("CMD.exe", $"/k {cmd}");
         }
 
         private void Downgrade(object sender, RoutedEventArgs e)
         {
+            var cmd = BuildMigrationCmd("downgrade");
+
+            System.Diagnostics.Process.Start("CMD.exe", $"/k {cmd}");
+        }
+
+        private string BuildMigrationCmd(string migrationType)
+        {
             var username = Username.Text;
             var password = Password.Password;
             var server = Server.Text;
             var database = Database.Text;
             var path = MigrationPath.Text;
+            var version = TargetVersion.Text;
 
-            var cmd = $@"C:\dbmigrator\dbmigrator.exe downgrade -s {server} -d {database}";
+            var cmd = $@"C:\dbmigrator\dbmigrator.exe {migrationType} -s {server} -d {database}";
 
             if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 cmd += $" -u {username} -p {password}";
 
             cmd += $"-f {path}";
 
-            System.Diagnostics.Process.Start("CMD.exe", $"/k {cmd}");
+            if (!string.IsNullOrEmpty(version))
+                cmd += $" -v {version}";
+
+            return cmd;
         }
 
         internal void SetMigrationPath(string folderPath)

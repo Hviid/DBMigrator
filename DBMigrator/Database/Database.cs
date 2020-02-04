@@ -40,6 +40,12 @@ namespace DBMigrator
         private void SetupConnAndLogger(string connectionString)
         {
             Sqlconn = new SqlConnection(connectionString);
+            Sqlconn.InfoMessage += Sqlconn_InfoMessage;
+        }
+
+        private void Sqlconn_InfoMessage(object sender, SqlInfoMessageEventArgs e)
+        {
+            _logger.LogInformation(e.Message);
         }
 
         private void CreateDBVersionTable()

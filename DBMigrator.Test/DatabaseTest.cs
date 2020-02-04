@@ -49,5 +49,17 @@ namespace DBMigrator.Test
             Assert.AreEqual("A", dbScript.Checksum);
             Assert.AreNotEqual(dbScript.ExecutionTime, null);
         }
+
+
+        [TestMethod]
+        public void Message_test()
+        {
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            database.GetDBState();
+            database.ExecuteSingleCommand("PRINT 'Test1'");
+            database.ExecuteSingleCommand("RAISERROR('Test2', 0, 1, 'asd')");
+            
+            //See test output windows
+        }
     }
 }

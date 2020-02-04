@@ -111,7 +111,10 @@ namespace DBMigrator
                 "DatabaseIndexesChecksum FROM [DBVersionScripts] order by [Date] desc");
 
             if (!data.Read())
+            {
+                Sqlconn.Close();
                 return (null, null, null, null, null);
+            }
 
             var databaseTriggersChecksum = data.GetValue(0).GetType() == typeof(DBNull) ? null: (byte[])data.GetValue(0);
             var DatabaseTablesAndViewsChecksum = data.GetValue(1).GetType() == typeof(DBNull) ? null : (byte[])data.GetValue(1);

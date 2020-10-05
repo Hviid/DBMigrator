@@ -52,7 +52,7 @@
             if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
                 cmd += $" -u {username} -p {password}";
 
-            cmd += $"-f {path}";
+            cmd += $" -f {path}";
 
             if (!string.IsNullOrEmpty(version))
                 cmd += $" -v {version}";

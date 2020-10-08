@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System;
 using DBMigrator.Middleware;
+#nullable enable
 
 namespace DBMigrator.Console
 {

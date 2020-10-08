@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build Dbmigrator.Console --configuration Release
+      run: dotnet build Dbmigrator.Console\DBMigrator.Console.csproj --configuration Release
     - name: Test
       run: dotnet test --verbosity normal
     - name: GitHub Releases

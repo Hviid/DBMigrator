@@ -35,7 +35,7 @@ namespace DBMigrator.Model
         private List<UpgradeScript> _upgradeScripts { get; } = new List<UpgradeScript>();
         public IReadOnlyList<UpgradeScript> UpgradeScripts
         {
-            get { return _upgradeScripts.AsReadOnly(); }
+            get { return _upgradeScripts.OrderBy(u => u.Order).ToList().AsReadOnly(); }
         }
 
         public List<DowngradeScript> RollbackScripts {

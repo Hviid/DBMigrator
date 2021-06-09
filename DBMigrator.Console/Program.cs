@@ -71,6 +71,11 @@ namespace DBMigrator.Console
                 "Runs command without Database validation first",
                 CommandOptionType.NoValue);
 
+            CommandOption optionsArg = commandLineApplication.Option(
+                "--options <options>",
+                "Extra options appended to the connection string, ie --options Encrypt=False;TrustServerCertificate=False;",
+                CommandOptionType.SingleValue);
+
             IServiceCollection serviceCollection = new ServiceCollection();
             Bootstrapper.ConfigureServices(serviceCollection);
 
@@ -95,7 +100,8 @@ namespace DBMigrator.Console
                 var username = usernameArg.Value();
                 var password = passwordArg.Value();
                 var databasename = databasenameArg.Value();
-                var database = new Database(servername, databasename, username, password);
+                var options = optionsArg.Value();
+                var database = new Database(servername, databasename, username, password, options);
 
                 try
                 {

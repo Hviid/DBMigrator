@@ -20,7 +20,7 @@ namespace DBMigrator
         private Regex _goRegex = new Regex(@"[\n\r]GO\b");
 
 
-        public Database(string servername, string database, string username, string password)
+        public Database(string servername, string database, string username, string password, string options)
         {
             var loggerFactory = Bootstrapper.GetConfiguredServiceProvider().GetRequiredService<ILoggerFactory>();
             _logger = loggerFactory.CreateLogger<Database>();
@@ -28,11 +28,11 @@ namespace DBMigrator
             string connectionString;
             if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
             {
-                connectionString = $"Application Name=DbMigrator;Data Source={servername};Initial Catalog={database};Integrated Security=true;MultipleActiveResultSets=True";
+                connectionString = $"Application Name=DbMigrator;Data Source={servername};Initial Catalog={database};Integrated Security=true;MultipleActiveResultSets=True;" + options;
             }
             else
             {
-                connectionString = $"Application Name=DbMigrator;Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True";
+                connectionString = $"Application Name=DbMigrator;Data Source={servername};Initial Catalog={database};Persist Security Info=True;User ID={username};Password={password};MultipleActiveResultSets=True;" + options;
             }
             SetupConnAndLogger(connectionString);
         }

@@ -15,7 +15,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Versions_noversions_test()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             database.GetDBState();
             database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
             var versions = database.GetDBState();
@@ -32,7 +32,7 @@ namespace DBMigrator.Test
             script.SQL = "SELECT * FROM DBVersionScripts";
 
 
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             database.GetDBState();
             database.ExecuteSingleCommand("DELETE FROM DBVersionScripts");
 
@@ -54,7 +54,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void Message_test()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             database.GetDBState();
             database.ExecuteSingleCommand("PRINT 'Test1'");
             database.ExecuteSingleCommand("RAISERROR('Test2', 0, 1, 'asd')");

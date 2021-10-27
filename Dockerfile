@@ -1,7 +1,9 @@
-FROM mcr.microsoft.com/dotnet/runtime:5.0.9-alpine3.13-amd64 AS base
+FROM mcr.microsoft.com/dotnet/runtime:5.0.11-alpine3.14-amd64 AS base
 WORKDIR /app
+RUN apk add --no-cache icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
-FROM mcr.microsoft.com/dotnet/sdk:5.0.400-alpine3.13-amd64 AS build
+FROM mcr.microsoft.com/dotnet/sdk:5.0.402-alpine3.14-amd64 AS build
 
 WORKDIR /src
 COPY ./DBMigrator.Console/DBMigrator.Console.csproj DBMigrator.Console/DBMigrator.Console.csproj

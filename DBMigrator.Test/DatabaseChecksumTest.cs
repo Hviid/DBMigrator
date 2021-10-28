@@ -12,7 +12,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void GetTablesViewsAndColumnsChecksum_doesnt_change()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             var checksum = database.GetDatabaseCurrentChecksums();
             var checksum2 = database.GetDatabaseCurrentChecksums();
             Assert.AreEqual(BitConverter.ToString(checksum.DatabaseTablesAndViewsChecksum), BitConverter.ToString(checksum2.DatabaseTablesAndViewsChecksum));
@@ -21,7 +21,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void TablesChecksum_changes()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             var checksum = database.GetDatabaseCurrentChecksums();
             database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTable]([Test][nvarchar](max) NULL)");
             var checksum2 = database.GetDatabaseCurrentChecksums();
@@ -32,7 +32,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void ViewsChecksum_changes()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTable]([Test][nvarchar](max) NULL)");
             var checksum = database.GetDatabaseCurrentChecksums();
             database.ExecuteSingleCommand("CREATE VIEW [dbo].DBMigratorView AS SELECT Test FROM [dbo].[DBMigratorTable]");
@@ -45,7 +45,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void TableColumnsChecksum_changes()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTable]([Test][nvarchar](max) NULL)");
             var checksum = database.GetDatabaseCurrentChecksums();
             database.ExecuteSingleCommand("ALTER TABLE [dbo].[DBMigratorTable] ADD Test2 int");
@@ -57,7 +57,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void TableColumnsDataTypeChecksum_changes()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTable]([Test][nvarchar](max) NULL)");
             var checksum = database.GetDatabaseCurrentChecksums();
             database.ExecuteSingleCommand("ALTER TABLE [dbo].[DBMigratorTable] ALTER COLUMN [Test] int");
@@ -69,7 +69,7 @@ namespace DBMigrator.Test
         [TestMethod]
         public void ViewColumnsChecksum_changes()
         {
-            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "");
+            var database = new Database(@"(localdb)\mssqllocaldb", "MyDatabase", "", "", "");
             database.ExecuteSingleCommand("CREATE TABLE [dbo].[DBMigratorTable]([Test][nvarchar](max) NULL, Test2 int)");
             database.ExecuteSingleCommand("CREATE VIEW [dbo].DBMigratorView AS SELECT Test FROM [dbo].[DBMigratorTable]");
             var checksum = database.GetDatabaseCurrentChecksums();

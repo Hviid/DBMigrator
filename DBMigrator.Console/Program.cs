@@ -238,8 +238,7 @@ namespace DBMigrator.Console
             if (diff1.Count > 0)
             {
                 dbfolder1.AddRollbacks(diff1);
-                var diffText1 = differ1.DowngradeDiffText(diff1);
-                _logger.LogInformation(diffText1);
+                differ1.LogDownGradeDiffText(diff1, _logger);
                 if (!noPrompt)
                 {
                     _logger.LogInformation("Press any key to continue downgrade.");

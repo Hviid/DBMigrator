@@ -87,7 +87,7 @@ namespace DBMigrator
                 }
                 else if (!Regex.IsMatch(scriptName, MigrationScript.MIGRATIONS_ROLLBACK_FILENAME_REGEX))
                 {
-                    throw new Exception($"file {scriptName} aren't a rollback script, and doesn't match the expected regex format: {MigrationScript.MIGRATIONS_UPGRADE_FILENAME_REGEX}");
+                    throw new Exception($"file {scriptName} isn't a rollback script, and doesn't match the expected upgrade script regex format: {MigrationScript.MIGRATIONS_UPGRADE_FILENAME_REGEX}");
                 }
             }
         }
@@ -100,6 +100,10 @@ namespace DBMigrator
         private string GetFeaturePath(Feature feature)
         {
             var versionFolderPath = Path.Combine(_migrationsDirectory.FullName, feature.Version.Name);
+            if (feature.DirectoryName == null)
+            {
+                return null;
+            }
             return Path.Combine(versionFolderPath, feature.DirectoryName);
         }
 
@@ -107,10 +111,13 @@ namespace DBMigrator
         {
             foreach (var version in versions)
             {
+                var rollbackVersion = this.allVersions.Find(x => x.Name == version.Name);
                 foreach (var feature in version.Features)
                 {
+                    var rollbackFeature = rollbackVersion.AddAndOrGetFeature(feature.Name, 0);
                     foreach (var script in feature.UpgradeScripts)
                     {
+                        script.Feature.DirectoryName = rollbackFeature.DirectoryName;
                         script.RollbackScript = FindRollback(script);
                     }
                 }
@@ -123,13 +130,17 @@ namespace DBMigrator
 
             var rollbackFileName = $"{match.Groups[1]}_rollback_{match.Groups[2]}.sql";
 
-            var filePath = Path.Combine(GetFeaturePath(upgradeScript.Feature), "Migrations", rollbackFileName);
-            if (System.IO.File.Exists(filePath))
+            var rollbackFeaturePath = GetFeaturePath(upgradeScript.Feature);
+            if (rollbackFeaturePath != null)
             {
-                var rollbackScript =  new DowngradeScript(rollbackFileName, upgradeScript.Order, upgradeScript.Feature);
-                rollbackScript.UpgradeScript = upgradeScript;
-                rollbackScript.SQL = GetFileContent(filePath);
-                return rollbackScript;
+                var filePath = Path.Combine(rollbackFeaturePath, "Migrations", rollbackFileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    var rollbackScript = new DowngradeScript(rollbackFileName, upgradeScript.Order, upgradeScript.Feature);
+                    rollbackScript.UpgradeScript = upgradeScript;
+                    rollbackScript.SQL = GetFileContent(filePath);
+                    return rollbackScript;
+                }
             }
             return null;
         }

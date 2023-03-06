@@ -31,7 +31,7 @@ namespace DBMigrator.Model
 
         public int Order { get; }
         public string Name { get; }
-        public string DirectoryName { get; }
+        public string DirectoryName { get; set; }
         private List<UpgradeScript> _upgradeScripts { get; } = new List<UpgradeScript>();
         public IReadOnlyList<UpgradeScript> UpgradeScripts
         {

@@ -36,18 +36,20 @@ namespace DBMigrator
 
             try
             {
-                foreach (var rollbackToVersion in versionsToRollback)
+                var _versionsToRollback = new List<DBVersion>(versionsToRollback);
+                _versionsToRollback.Reverse();
+
+                foreach (var rollbackToVersion in _versionsToRollback)
                 {
                     _logger.LogInformation($"Downgrading to version {rollbackToVersion.Name}");
 
-                    foreach (var featureToRollback in rollbackToVersion.Features)
+                    foreach (var featureToRollback in rollbackToVersion.Features.Reverse())
                     {
                         DowngradeFeature(featureToRollback);
                     }
-
-                    //throw "test"
-                    _database.CommitTransaction();
                 }
+                _database.CommitTransaction();
+
             } catch (Exception ex) {
                 _logger.LogError(ex, ex.Message);
                 _database.RollbackTransaction();
@@ -120,8 +122,15 @@ namespace DBMigrator
 
             foreach (var script in feature.RollbackScripts)
             {
-                _logger.LogInformation($"--------Running script: {script.FileName}");
-                DowngradeWithFile(script);
+                if (script != null)
+                {
+                    _logger.LogInformation($"--------Running script: {script.FileName}");
+                    DowngradeWithFile(script);
+                }
+                else
+                {
+                    _logger.LogWarning($"--------Feature: {feature.Name} has no downgrade script, skipping");
+                }
             }
         }
 

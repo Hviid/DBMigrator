@@ -1,4 +1,5 @@
 ﻿using DBMigrator.Model;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,23 +31,44 @@ namespace DBMigrator
             return str;
         }
 
-        public string DowngradeDiffText(List<DBVersion> diff)
+        public void LogDownGradeDiffText(List<DBVersion> diff, ILogger logger)
         {
-            var str = "";
-            foreach (var version in diff)
+            var newLine = "\n      ";
+
+            var listToLog = new List<DBVersion>(diff);
+            listToLog.Reverse(); 
+
+            foreach (var version in listToLog)
             {
-                str += $"version: {version.Name} \n";
-                foreach (var feature in version.Features)
+                logger.LogInformation($"VERSION: {version.Name}");
+                foreach (var feature in version.Features.Reverse())
                 {
-                    str += $"--feature: {feature.Name} \n";
-                    str += $"---Rollbacks: \n";
-                    foreach (var script in feature.UpgradeScripts)
+
+                    List<string> scriptStr = new List<string>() { $"--feature: {feature.Name}", "---Rollbacks:" };
+                    var showWarning = false;
+
+                    foreach (var script in feature.UpgradeScripts.Reverse())
                     {
-                        str += $"----script: {script.RollbackScript.FileName} \n";
+                        if (script.RollbackScript != null)
+                        {
+                            scriptStr.Add($"----script: { script.RollbackScript.FileName}");
+                        } 
+                        else
+                        {
+                            scriptStr.Add($"----script: Warning: No Rollback script for this feature: {script.FileName}");
+                            showWarning = true;
+                        }
+                    }
+                    if (showWarning)
+                    {
+                        logger.LogWarning(string.Join(newLine, scriptStr));
+                    } 
+                    else
+                    {
+                        logger.LogInformation(string.Join(newLine, scriptStr));
                     }
                 }
             }
-            return str;
         }
 
         /// <summary>

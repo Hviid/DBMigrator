@@ -35,8 +35,10 @@ namespace DBMigrator
         {
             var newLine = "\n      ";
 
-            diff.Reverse();
-            foreach (var version in diff)
+            var listToLog = new List<DBVersion>(diff);
+            listToLog.Reverse(); 
+
+            foreach (var version in listToLog)
             {
                 logger.LogInformation($"VERSION: {version.Name}");
                 foreach (var feature in version.Features.Reverse())

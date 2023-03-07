@@ -36,8 +36,10 @@ namespace DBMigrator
 
             try
             {
-                versionsToRollback.Reverse();
-                foreach (var rollbackToVersion in versionsToRollback)
+                var _versionsToRollback = new List<DBVersion>(versionsToRollback);
+                _versionsToRollback.Reverse();
+
+                foreach (var rollbackToVersion in _versionsToRollback)
                 {
                     _logger.LogInformation($"Downgrading to version {rollbackToVersion.Name}");
 

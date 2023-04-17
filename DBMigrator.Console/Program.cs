@@ -71,6 +71,11 @@ namespace DBMigrator.Console
                 "Runs command without Database validation first",
                 CommandOptionType.NoValue);
 
+            CommandOption dryRynArg = commandLineApplication.Option(
+                "--dry-run",
+                "Runs command as a dry run without committing to the database",
+                CommandOptionType.NoValue);
+
             CommandOption optionsArg = commandLineApplication.Option(
                 "--options <options>",
                 "Extra options appended to the connection string, ie --options Encrypt=False;TrustServerCertificate=False;",
@@ -112,14 +117,14 @@ namespace DBMigrator.Console
                             {
                                 ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
                             }
-                            Upgrade(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
+                            Upgrade(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue(), dryRynArg.HasValue());
                             break;
                         case "downgrade":
                             if (!noValidationArg.HasValue())
                             {
                                 ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
                             }
-                            Rollback(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue());
+                            Rollback(versionArg.Value(), database, migrationDirectory, noPromptArg.HasValue(), dryRynArg.HasValue());
                             break;
                         case "validatedatabase":
                             ValidateDatabase(database, migrationDirectory, noPromptArg.HasValue());
@@ -183,7 +188,7 @@ namespace DBMigrator.Console
             _logger.LogInformation("Upgrade finished");
         }
 
-        private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
+        private static void Upgrade(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false, bool dryRun = false)
         {
             _logger.LogInformation("Starting upgrade");
             var dbfolder = new DBFolder(migrationsDir);
@@ -211,7 +216,7 @@ namespace DBMigrator.Console
                 }
 
                 var timer = new Timer(callback, null, 0, 1000);
-                migrator.Upgrade(diff);
+                migrator.Upgrade(diff, dryRun);
                 timer.Dispose();
 
                 if (!noPrompt)
@@ -226,7 +231,7 @@ namespace DBMigrator.Console
             _logger.LogInformation("Upgrade finished");
         }
 
-        private static void Rollback(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false)
+        private static void Rollback(string toVersion, Database database, DirectoryInfo migrationsDir, bool noPrompt = false, bool dryRun = false)
         {
             _logger.LogInformation("Starting downgrade");
             var dbVersions1 = database.GetDBState();
@@ -246,7 +251,7 @@ namespace DBMigrator.Console
                 }
 
                 var migrator = new Migrator(database, dbfolder1, middleware);
-                migrator.Rollback(diff1);
+                migrator.Rollback(diff1, dryRun);
             }
             else
             {

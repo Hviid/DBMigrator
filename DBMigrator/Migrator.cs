@@ -25,7 +25,7 @@ namespace DBMigrator
             _logger = loggerFactory.CreateLogger<Migrator>();
         }
 
-        public void Rollback(List<DBVersion> versionsToRollback)
+        public void Rollback(List<DBVersion> versionsToRollback, bool dryRun = false)
         {
             _database.BeginTransaction();
 
@@ -48,7 +48,15 @@ namespace DBMigrator
                         DowngradeFeature(featureToRollback);
                     }
                 }
-                _database.CommitTransaction();
+                if (dryRun)
+                {
+                    _logger.LogInformation("DRY RUN: Dry run enabled, database not modified");
+                    _database.RollbackTransaction();
+                }
+                else
+                {
+                    _database.CommitTransaction();
+                }
 
             } catch (Exception ex) {
                 _logger.LogError(ex, ex.Message);
@@ -59,7 +67,7 @@ namespace DBMigrator
             _database.Close();
         }
 
-        public void Upgrade(List<DBVersion> versionsToUpgrade)
+        public void Upgrade(List<DBVersion> versionsToUpgrade, bool dryRun = false)
         {
             if(versionsToUpgrade.Count() == 0)
             {
@@ -95,9 +103,16 @@ namespace DBMigrator
                         UpgradeFeature(featureToUpgrade);
                     }
                 }
-                _database.CommitTransaction();
-                //throw new Exception("test");
-                
+                if (dryRun)
+                {
+                    _logger.LogInformation("DRY RUN: Dry run enabled, database not modified");
+                    _database.RollbackTransaction();
+                }
+                else
+                {
+                    _database.CommitTransaction();
+                }
+
             } catch(Exception ex) {
                 _logger.LogError(ex, "Error occured rolling back transaction");
                 _database.RollbackTransaction();

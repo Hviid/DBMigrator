@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Publish
-      run: dotnet publish "/home/runner/work/DBMigrator/DBMigrator/DBMigrator.Console/DBMigrator.Console.csproj" --configuration Release -o "publish"
+      run: dotnet publish "/home/runner/work/DBMigrator/DBMigrator/DBMigrator.Console/DBMigrator.Console.csproj" --framework net472 --configuration Release -o "publish"
     #- name: Test
     #  run: dotnet test "/home/runner/work/DBMigrator/DBMigrator/DBMigrator.Test/DBMigrator.Test.csproj" --verbosity normal
     - name: GitHub Releases

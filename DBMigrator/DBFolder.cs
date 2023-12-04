@@ -114,7 +114,13 @@ namespace DBMigrator
                 var rollbackVersion = this.allVersions.Find(x => x.Name == version.Name);
                 foreach (var feature in version.Features)
                 {
+                    // preserve order from rollbackversionfeature here somehow
+
                     var rollbackFeature = rollbackVersion.AddAndOrGetFeature(feature.Name, 0);
+                    if (feature.Order == 0)
+                    {
+                        feature.Order = rollbackFeature.Order;
+                    }
                     foreach (var script in feature.UpgradeScripts)
                     {
                         script.Feature.DirectoryName = rollbackFeature.DirectoryName;

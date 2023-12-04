@@ -29,7 +29,7 @@ namespace DBMigrator.Model
             throw new ArgumentOutOfRangeException(nameof(featurename), featurename, $"Argument {nameof(featurename)} does not adhere to regex");
         }
 
-        public int Order { get; }
+        public int Order { get; set; }
         public string Name { get; }
         public string DirectoryName { get; set; }
         private List<UpgradeScript> _upgradeScripts { get; } = new List<UpgradeScript>();

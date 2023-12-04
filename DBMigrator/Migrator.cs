@@ -43,7 +43,10 @@ namespace DBMigrator
                 {
                     _logger.LogInformation($"Downgrading to version {rollbackToVersion.Name}");
 
-                    foreach (var featureToRollback in rollbackToVersion.Features.Reverse())
+                    // order features
+                    var orderredRollbackToVersion = rollbackToVersion.Features.OrderByDescending(f => f.Order);
+
+                    foreach (var featureToRollback in orderredRollbackToVersion)
                     {
                         DowngradeFeature(featureToRollback);
                     }

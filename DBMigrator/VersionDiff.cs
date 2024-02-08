@@ -119,7 +119,7 @@ namespace DBMigrator
                             var diffFeature = diffVersion.Features.SingleOrDefault(t => t.Name == targetFeature.Name);
                             if (diffFeature == null)
                             {
-                                diffFeature = diffVersion.AddAndOrGetFeature(targetFeature.Name, targetFeature.Order);
+                                diffFeature = diffVersion.AddAndOrGetFeature(sourceFeature.Name, sourceFeature.Order);
                             }
                             CopyUpgradeScriptToFeature(sourceUpgradeScript, diffFeature);
                         }

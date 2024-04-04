@@ -14,8 +14,8 @@ namespace DBMigrator.SQL
                 "COLUMN_NAME, " +
                 "NUMERIC_PRECISION, " +
                 "DATETIME_PRECISION, " +
-                "CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS" +
-                "WHERE TABLE_NAME IN (SELECT name FROM sys.tables)" +
+                "CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS " +
+                "WHERE TABLE_NAME IN (SELECT name FROM sys.tables) " +
                 "ORDER BY TABLE_NAME, COLUMN_NAME";
         }
 

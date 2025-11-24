@@ -1,3 +1,4 @@
+using System.Linq;
 using DBMigrator.Aspire.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Aspire.Hosting;

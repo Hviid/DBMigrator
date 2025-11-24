@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using DBMigrator.Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);

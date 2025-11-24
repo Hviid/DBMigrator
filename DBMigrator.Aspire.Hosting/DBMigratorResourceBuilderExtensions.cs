@@ -1,6 +1,8 @@
 #nullable enable
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using System;
+using System.IO;
 
 namespace DBMigrator.Aspire.Hosting;
 
@@ -25,6 +27,57 @@ public static class DBMigratorResourceBuilderExtensions
         
         return builder.AddResource(resource)
             .WithAnnotation(new DBMigratorMigrationsPathAnnotation(migrationsPath));
+    }
+
+    /// <summary>
+    /// Adds a DBMigrator resource to the application with migrations path resolved from a project reference.
+    /// </summary>
+    /// <typeparam name="TProject">The type representing the project containing migrations.</typeparam>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="relativeMigrationsPath">The relative path to the migrations folder within the project (default: "Migrations").</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<DBMigratorResource> AddDBMigrator<TProject>(
+        this IDistributedApplicationBuilder builder,
+        string name,
+        string relativeMigrationsPath = "Migrations")
+        where TProject : IProjectMetadata, new()
+    {
+        var projectMetadata = new TProject();
+        var projectDirectory = Path.GetDirectoryName(projectMetadata.ProjectPath) 
+            ?? throw new InvalidOperationException($"Could not determine project directory for {projectMetadata.ProjectPath}");
+        
+        var migrationsPath = Path.Combine(projectDirectory, relativeMigrationsPath);
+
+        var resource = new DBMigratorResource(name, migrationsPath);
+        
+        return builder.AddResource(resource)
+            .WithAnnotation(new DBMigratorMigrationsPathAnnotation(migrationsPath))
+            .WithAnnotation(new DBMigratorProjectReferenceAnnotation(projectMetadata.ProjectPath));
+    }
+
+    /// <summary>
+    /// Adds a DBMigrator resource to the application with a reference to a database resource and migrations from a project.
+    /// </summary>
+    /// <typeparam name="TProject">The type representing the project containing migrations.</typeparam>
+    /// <typeparam name="TDatabase">The type of the database resource.</typeparam>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="database">The database resource to migrate.</param>
+    /// <param name="relativeMigrationsPath">The relative path to the migrations folder within the project (default: "Migrations").</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<DBMigratorResource> AddDBMigrator<TProject, TDatabase>(
+        this IDistributedApplicationBuilder builder,
+        string name,
+        IResourceBuilder<TDatabase> database,
+        string relativeMigrationsPath = "Migrations")
+        where TProject : IProjectMetadata, new()
+        where TDatabase : IResourceWithConnectionString
+    {
+        var migrator = builder.AddDBMigrator<TProject>(name, relativeMigrationsPath)
+            .WithAnnotation(new DBMigratorDatabaseReferenceAnnotation(database.Resource));
+
+        return migrator;
     }
 
     /// <summary>

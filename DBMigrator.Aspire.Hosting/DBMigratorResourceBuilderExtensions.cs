@@ -44,8 +44,7 @@ public static class DBMigratorResourceBuilderExtensions
         where T : IResourceWithConnectionString
     {
         var migrator = builder.AddDBMigrator(name, migrationsPath)
-            .WithAnnotation(new DBMigratorDatabaseReferenceAnnotation(database.Resource))
-            .WithReference(database);
+            .WithAnnotation(new DBMigratorDatabaseReferenceAnnotation(database.Resource));
 
         return migrator;
     }
@@ -96,14 +95,13 @@ public static class DBMigratorResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="database">The database resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DBMigratorResource> WithReference<T>(
+    public static IResourceBuilder<DBMigratorResource> WithDatabaseReference<T>(
         this IResourceBuilder<DBMigratorResource> builder,
         IResourceBuilder<T> database)
         where T : IResourceWithConnectionString
     {
         return builder
-            .WithAnnotation(new DBMigratorDatabaseReferenceAnnotation(database.Resource))
-            .WithReference(database);
+            .WithAnnotation(new DBMigratorDatabaseReferenceAnnotation(database.Resource));
     }
 
     /// <summary>

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29319.158
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11218.70 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D870B7A6-4C06-45DD-982E-6D8362A82D3D}"
 	ProjectSection(SolutionItems) = preProject
@@ -15,6 +15,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBMigrator.Test", "DBMigrator.Test\DBMigrator.Test.csproj", "{6894DF2B-A153-4ED0-9198-B085A801E118}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigratorVsix", "DBMigratorVsix\DBMigratorVsix.csproj", "{5D4EFF96-D84B-42B8-BF3F-54172B90C71F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigrator.Aspire.Hosting", "DBMigrator.Aspire.Hosting\DBMigrator.Aspire.Hosting.csproj", "{03663958-2A9B-05FB-9912-A8225CDB9CA7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigrator.Aspire.Tests", "DBMigrator.Aspire.Tests\DBMigrator.Aspire.Tests.csproj", "{E82B06A5-3879-5F9C-991B-02735B4C0A20}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBMigrator.Aspire.Example", "Examples\DBMigrator.Aspire.Example\DBMigrator.Aspire.Example.csproj", "{03F7FC7F-FB98-66C9-7832-53020E0B66B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +44,18 @@ Global
 		{5D4EFF96-D84B-42B8-BF3F-54172B90C71F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D4EFF96-D84B-42B8-BF3F-54172B90C71F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D4EFF96-D84B-42B8-BF3F-54172B90C71F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03663958-2A9B-05FB-9912-A8225CDB9CA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03663958-2A9B-05FB-9912-A8225CDB9CA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03663958-2A9B-05FB-9912-A8225CDB9CA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03663958-2A9B-05FB-9912-A8225CDB9CA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E82B06A5-3879-5F9C-991B-02735B4C0A20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E82B06A5-3879-5F9C-991B-02735B4C0A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E82B06A5-3879-5F9C-991B-02735B4C0A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E82B06A5-3879-5F9C-991B-02735B4C0A20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03F7FC7F-FB98-66C9-7832-53020E0B66B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03F7FC7F-FB98-66C9-7832-53020E0B66B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03F7FC7F-FB98-66C9-7832-53020E0B66B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03F7FC7F-FB98-66C9-7832-53020E0B66B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

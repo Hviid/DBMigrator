@@ -32,11 +32,61 @@ Someone goes back and fixes an issue in a script that there's already been deplo
 * Upgrade
 * Rollback
 * Validation
+* **.NET Aspire Integration** - Automatic migrations during app startup
 
 ### Why DBMigrator
 Based on the above we choose to go the Migration based path.
 
 <!--- Describe why we for example don't use flyway -->
+
+## Getting Started
+
+### Console Application
+
+Run DBMigrator with parameters like follows:
+
+    upgrade -v {toVersionString} -s {servername} -d {database} -u {username} -p {password} -f {folderPath}
+
+Where "-v" is optional and will default be the latest version.
+If -u and -p is omitted "Integrated Security" will be used
+
+### .NET Aspire Integration
+
+DBMigrator can be integrated with .NET Aspire to automatically run migrations during application startup.
+
+#### Installation
+
+```bash
+dotnet add package DBMigrator.Aspire.Hosting
+```
+
+#### Basic Usage
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var sqlServer = builder.AddSqlServer("sql");
+var database = sqlServer.AddDatabase("mydb");
+
+var dbMigrator = builder.AddDBMigrator("dbmigrator", database, "./Migrations");
+builder.AddDBMigratorLifecycleHook();
+
+var api = builder.AddProject<Projects.MyApi>("api")
+    .WaitForDBMigrator(dbMigrator);
+
+builder.Build().Run();
+```
+
+#### Features
+
+- ? Automatic migration execution on startup
+- ? Integration with Aspire's resource management
+- ? Support for multiple databases
+- ? Configurable target versions
+- ? Optional database validation
+- ? Dry run mode for testing
+
+See [DBMigrator.Aspire.Hosting](DBMigrator.Aspire.Hosting/README.md) for detailed documentation and [Examples](Examples/DBMigrator.Aspire.Example/) for a working example.
 
 ## How it works
 Normally migrations are straight sequential list of migrations that get run one after another.
@@ -106,5 +156,6 @@ If -u and -p is omitted "Integrated Security" will be used
 
 ### TODO
 - [ ] Publish dbmigrator as nuget
+- [x] .NET Aspire integration
 - [ ] Create Team Services extension for dbmigrator
 - [ ] Make DBMigrator create migration scripts with integrity checks, etc.

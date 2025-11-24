@@ -4,21 +4,21 @@
 
 This scenario upgrades all four projects in the DBMigrator solution to .NET 9.0 using the **Big Bang Strategy**. All project and package updates, build, and fix operations are performed in a single atomic task, followed by automated test validation and a final commit. Manual validation steps are excluded; only automatable actions are included.
 
-**Progress**: 0/3 tasks complete (0%) ![0%](https://progress-bar.xyz/0)
+**Progress**: 1/3 tasks complete (33%) ![33%](https://progress-bar.xyz/33)
 
 ## Tasks
 
-### [▶] TASK-001: Verify prerequisites for .NET 9.0 migration
+### [✓] TASK-001: Verify prerequisites for .NET 9.0 migration *(Completed: 2025-11-24 08.29)*
 **References**: Plan §3.2, Plan §8.1
 
-- [▶] (1) Verify .NET 9.0 SDK is installed (`dotnet --list-sdks`)
-- [ ] (2) Check for global.json compatibility with .NET 9.0 (if present)
-- [ ] (3) Prerequisites confirmed (**Verify**)
+- [✓] (1) Verify .NET 9.0 SDK is installed (`dotnet --list-sdks`)
+- [✓] (2) Check for global.json compatibility with .NET 9.0 (if present)
+- [✓] (3) Prerequisites confirmed (**Verify**)
 
-### [ ] TASK-002: Atomic upgrade of all projects and packages to .NET 9.0
+### [▶] TASK-002: Atomic upgrade of all projects and packages to .NET 9.0
 **References**: Plan §2.3, Plan §4, Plan §5, Plan §6
 
-- [ ] (1) Update all project files to target .NET 9.0 per Plan §4 (multi-target DBMigrator, net9.0 for others, net9.0-windows for DBMigratorVsix)
+- [▶] (1) Update all project files to target .NET 9.0 per Plan §4 (multi-target DBMigrator, net9.0 for others, net9.0-windows for DBMigratorVsix)
 - [ ] (2) Convert DBMigratorVsix to SDK-style project format per Plan §4 (preserve VSIX manifest and assets)
 - [ ] (3) Update all package references per Plan §5 (Microsoft.Extensions.*, System.Data.SqlClient, remove deprecated/included packages)
 - [ ] (4) Restore all dependencies for the solution

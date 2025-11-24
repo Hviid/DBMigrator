@@ -62,3 +62,15 @@ public class DBMigratorDatabaseReferenceAnnotation(IResourceWithConnectionString
     /// </summary>
     public IResourceWithConnectionString DatabaseResource { get; } = databaseResource;
 }
+
+/// <summary>
+/// Annotation for storing the project path reference.
+/// </summary>
+/// <param name="projectPath">The path to the project file.</param>
+public class DBMigratorProjectReferenceAnnotation(string projectPath) : IResourceAnnotation
+{
+    /// <summary>
+    /// Gets the path to the project file.
+    /// </summary>
+    public string ProjectPath { get; } = projectPath;
+}

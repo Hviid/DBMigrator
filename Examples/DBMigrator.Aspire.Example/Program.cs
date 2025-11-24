@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using DBMigrator.Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -8,9 +10,25 @@ var sqlServer = builder.AddSqlServer("sql")
 
 var database = sqlServer.AddDatabase("exampledb");
 
-// Add DBMigrator - it will run migrations from the specified folder
+// ========================================
+// Option 1: Using explicit path (current)
+// ========================================
 var dbMigrator = builder.AddDBMigrator("dbmigrator", database, "./Migrations")
     .WithTargetVersion("1.0"); // Optional: specify target version
+
+// ========================================
+// Option 2: Using project reference (new in .NET 10/Aspire 13)
+// ========================================
+// If you have a separate migrations project:
+// var dbMigrator = builder.AddDBMigrator<Projects.MyMigrationsProject>("dbmigrator", database)
+//     .WithTargetVersion("1.0");
+
+// Or with custom relative path:
+// var dbMigrator = builder.AddDBMigrator<Projects.MyMigrationsProject>(
+//     "dbmigrator", 
+//     database, 
+//     relativeMigrationsPath: "Database/Scripts")
+//     .WithTargetVersion("1.0");
 
 // Register the lifecycle hook to execute migrations before app starts
 builder.AddDBMigratorLifecycleHook();

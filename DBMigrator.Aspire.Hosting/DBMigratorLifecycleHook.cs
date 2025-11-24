@@ -13,9 +13,11 @@ namespace DBMigrator.Aspire.Hosting;
 /// <summary>
 /// A lifecycle hook that executes DBMigrator migrations before the application starts.
 /// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete - will be updated in future version
 internal class DBMigratorLifecycleHook(
     ILogger<DBMigratorLifecycleHook> logger,
     ResourceNotificationService notificationService) : IDistributedApplicationLifecycleHook
+#pragma warning restore CS0618
 {
     public async Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
     {

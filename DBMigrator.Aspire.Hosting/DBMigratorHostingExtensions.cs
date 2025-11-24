@@ -17,7 +17,10 @@ public static class DBMigratorHostingExtensions
     public static IDistributedApplicationBuilder AddDBMigratorLifecycleHook(
         this IDistributedApplicationBuilder builder)
     {
+#pragma warning disable CS0618 // Type or member is obsolete - will be updated in future version
         builder.Services.AddLifecycleHook<DBMigratorLifecycleHook>();
+#pragma warning restore CS0618
         return builder;
     }
 }
+

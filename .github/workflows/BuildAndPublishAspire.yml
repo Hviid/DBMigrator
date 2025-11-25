@@ -30,13 +30,7 @@ jobs:
         run: dotnet build DBMigrator.Aspire.Hosting/DBMigrator.Aspire.Hosting.csproj --configuration Release --no-restore
 
       - name: Pack NuGet package
-        run: >
-          dotnet pack
-          DBMigrator.Aspire.Hosting/DBMigrator.Aspire.Hosting.csproj
-          --configuration Release
-          --no-build
-          --output ./nupkgs
-
+        run: dotnet pack DBMigrator.Aspire.Hosting/DBMigrator.Aspire.Hosting.csproj --configuration Release --no-build --output ./nupkgs
 
       - name: Publish to GitHub Packages
         run: dotnet nuget push "./nupkgs/*.nupkg" \
